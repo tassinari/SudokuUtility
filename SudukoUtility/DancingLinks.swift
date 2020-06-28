@@ -8,6 +8,89 @@
 
 import Foundation
 
+class DLXNode : Equatable{
+    struct Coordinate {
+        var row : UInt8
+        var column : UInt8
+    }
+    static func == (lhs: DLXNode, rhs: DLXNode) -> Bool {
+        return  ObjectIdentifier(rhs) == ObjectIdentifier(lhs)
+    }
+    init(_ coordinate : Coordinate){
+        self.coordinate = coordinate
+    }
+    init(){
+        self.coordinate = Coordinate(row: 0, column: 0)
+    }
+    var header : DLXNode?
+    var left : DLXNode?
+    var right : DLXNode?
+    var top : DLXNode? = nil
+    var bottom : DLXNode?
+    var coordinate : Coordinate
+    
+    var items : [DLXNode] {
+        guard let topNode = top else{
+            //TODO: better error enumeration
+            return []
+        }
+        var nodes : [DLXNode] = []
+        var nodePtr : DLXNode? = topNode
+        repeat{
+            nodes.append(nodePtr!)  //can force unwrap, will never be nil
+            nodePtr = nodePtr?.bottom
+        }while(nodePtr != nil && nodePtr != topNode)
+        return nodes
+    }
+    
+    internal func cover(){
+        guard let col = self.header  else {
+            return
+        }
+        col.left?.right = col.right
+        col.right?.left = col.left
+        for node in col.items{
+            var n = node.right
+            while(n != node){
+                n?.top?.bottom = n?.bottom
+                n?.bottom?.top = n?.top
+                n = node.right
+            }
+        }
+    }
+    internal func uncover(){
+        guard let col = self.header else {
+            return
+        }
+        col.left?.right = col
+        col.right?.left = col
+        for node in col.items{
+            var n = node.right
+            while(n != node){
+                n?.top?.bottom = n
+                n?.bottom?.top = n
+                n = node.right
+            }
+        }
+    }
+}
+
+extension DLXNode : CustomStringConvertible{
+    var description: String {
+        
+        return """
+        DLX Node:
+        <\(Unmanaged.passUnretained(self as AnyObject).toOpaque().debugDescription)>
+        coord : (\(self.coordinate.row), \(self.coordinate.column))
+        left: <\(Unmanaged.passUnretained(self.left as AnyObject).toOpaque().debugDescription)>
+        right: <\(Unmanaged.passUnretained(self.right as AnyObject).toOpaque().debugDescription)>
+        top: <\(Unmanaged.passUnretained(self.top as AnyObject).toOpaque().debugDescription)>
+        bottom: <\(Unmanaged.passUnretained(self.bottom as AnyObject).toOpaque().debugDescription)>
+        header: <\(Unmanaged.passUnretained(self.header as AnyObject).toOpaque().debugDescription)>
+        """
+    }
+    
+}
 enum DancingLinkError : Error{
     
     case parseError
@@ -18,20 +101,173 @@ class DancingLinks{
     private var entryPoint : ColumnNode?
     private var allColumnPointer : ColumnNode?
     private var allRowPointer : Node?
-    private var solutionSet : [Node] = []
+    private var solutionSet : [DLXNode] = []
     
     init(data : RawSudukoData) {
         self.data = data
         entryPoint =  baseMatrix(size: data.size)
     }
+    internal func getMinimumColumn(header : DLXNode)->DLXNode{
+        var lowestColumn = header
+        var h = header.right
+        while(h != header && h != nil){
+            if let myColumn = h, myColumn.items.count < lowestColumn.items.count{
+                lowestColumn = myColumn
+            }
+            h = h?.right
+        }
+        return lowestColumn
+    }
+    public func debugPrintMatrix(headPtr : DLXNode){
+        var colCnt = 0
+        var next : DLXNode? = headPtr
+        repeat{
+            print("Column: \(colCnt)")
+             print("Column header:")
+            print(next!)
+             print("Nodes")
+            print("____________")
+            guard let node = next?.top else{
+                print("NO TOP NODE PTR!!")
+                return
+            }
+            var nPtr : DLXNode? = node
+            repeat{
+                guard let myNode = nPtr else{
+                    print("No NODE")
+                    return
+                }
+                print(myNode)
+                nPtr = nPtr?.bottom
+                print("____________")
+            }while nPtr != nil && nPtr != node
+            colCnt += 1
+            next = next?.right
+        }while headPtr != next && next != nil
+        
+    }
     
-    public func solve() throws  {
-       //if colNode.size == 0 done
-        //pick a colmn node add to set
-        guard let col = entryPoint else{
+    public func makeMatrix(from : [Int], size : Int) -> DLXNode{
+        var headerPtr = DLXNode()
+        let first = headerPtr
+        //TODO: optimize, move down to main for loop
+        for i in 0..<size {
+            //header
+            let n = DLXNode()
+            
+            if (i == size - 1){
+                first.left = n
+                n.right = first
+            }else{
+                headerPtr.right = n
+                n.left = headerPtr
+            }
+            headerPtr = n
+        }
+        var row = 0
+        var col = 0
+        var rowPtr : DLXNode? = nil
+        var latestRowPtr : DLXNode? = nil
+       
+        for i in 0..<from.count{
+            col = i % size
+            row = i / size
+            if(col == 0){
+                rowPtr = nil
+                latestRowPtr = nil
+            }
+            
+           //if one add to matrix
+            if(from[i] == 1){
+                
+                //Columns
+                var colHeader : DLXNode = first
+                let theNewNode = DLXNode(DLXNode.Coordinate(row: UInt8(row), column: UInt8(col)))
+                //get col header
+                for _ in 0..<col{
+                    //TODO: fix return
+                     guard let c = colHeader.right else{
+                        return DLXNode()
+                    }
+                    colHeader = c
+                    
+                }
+                theNewNode.header = colHeader
+                //add new node to bottom of column
+                if let top = colHeader.top{
+                    //we have a top node, add to bottom
+                    theNewNode.bottom = top
+                    theNewNode.top = top.top
+                    top.top?.bottom = theNewNode
+                    top.top = theNewNode
+                    
+                }else{
+                    //No top node, make this the first
+                    colHeader.top = theNewNode
+                    theNewNode.top = theNewNode
+                    theNewNode.bottom = theNewNode
+                    
+                }
+                
+                //Rows
+                if rowPtr == nil {
+                    theNewNode.left = latestRowPtr
+                    latestRowPtr?.right = theNewNode
+                    latestRowPtr = theNewNode
+                }else{
+                    rowPtr = theNewNode
+                    latestRowPtr = theNewNode
+                }
+                
+            }
+            if(col == size - 1){
+                //last column, hook the last row to the first
+                latestRowPtr?.right = rowPtr
+                rowPtr?.left = latestRowPtr
+            }
+        }
+        return first
+    }
+    
+    
+    
+    public func solve(header : DLXNode) throws  {
+        
+        if header.right == header{
+            //solved
+            
             return
         }
-        
+        var column = self.getMinimumColumn(header: header)
+        column.cover()
+    
+        for row in column.items{
+            solutionSet.append(row)
+            
+            var rowptr = row.right
+            while row != rowptr{
+                rowptr?.cover()
+                rowptr = row.right
+            }
+            guard let nextColumn = column.right else{
+                throw DancingLinkError.parseError
+            }
+            try? solve(header: nextColumn)
+            solutionSet.removeAll(where: { $0 == row})
+            guard let c = row.header else{
+                throw DancingLinkError.parseError
+            }
+            rowptr = row.right
+            while row != rowptr{
+                rowptr?.uncover()
+                rowptr = row.right
+            }
+            column = c
+            
+            
+        }
+        column.uncover()
+       
     }
     
     internal func baseMatrix(size: UInt8) -> ColumnNode{
@@ -147,6 +383,7 @@ internal class ColumnNode : Equatable{
         return lhs.row == rhs.row && lhs.column == rhs.column && lhs.type == rhs.type
     }
     
+    //FIXME : remove,  tying suuduko impl to this class, need abstract DLX node
     var type : ColumnNodeType
     var covered : Bool
     var top : Node?
@@ -175,31 +412,31 @@ internal class ColumnNode : Equatable{
         }
         return nil
     }
-//    internal func cover(){
-//        //remove node from linked list, but node must keep reference to left tand right
-//        self.right?.left = self.left
-//        self.left?.right = self.right
-//        //remove rows
-//        if let items = self.items{
-//            for rowNode in items{
-//                rowNode.cover()
-//            }
-//        }
-//
-//    }
-//    internal func uncover(){
-//        //reweave in the node into the list
-//        self.left?.right = self
-//        self.right?.left = self
-//
-//        //re-add rows
-//        if let items = self.items{
-//            for rowNode in items{
-//                rowNode.uncover()
-//            }
-//        }
-//
-//    }
+    internal func cover(){
+        //remove node from linked list, but node must keep reference to left tand right
+        self.right?.left = self.left
+        self.left?.right = self.right
+        //remove rows
+        if let items = self.items{
+            for rowNode in items{
+                rowNode.cover()
+            }
+        }
+
+    }
+    internal func uncover(){
+        //reweave in the node into the list
+        self.left?.right = self
+        self.right?.left = self
+
+        //re-add rows
+        if let items = self.items{
+            for rowNode in items{
+                rowNode.uncover()
+            }
+        }
+
+    }
 
 }
 extension ColumnNode : CustomStringConvertible{
@@ -247,10 +484,11 @@ internal class Node : Equatable, CustomStringConvertible, Hashable{
         col.left?.right = col.right
         col.right?.left = col.left
         for node in nodes{
-            while(node.right != node){
-                let n = node.right
+            var n = node.right
+            while(n != node){
                 n?.top?.bottom = n?.bottom
                 n?.bottom?.top = n?.top
+                n = node.right
             }
         }
     }
@@ -261,10 +499,11 @@ internal class Node : Equatable, CustomStringConvertible, Hashable{
         col.left?.right = col
         col.right?.left = col
         for node in nodes{
-            while(node.right != node){
-                let n = node.right
+            var n = node.right
+            while(n != node){
                 n?.top?.bottom = n
                 n?.bottom?.top = n
+                n = node.right
             }
         }
     }

@@ -174,8 +174,26 @@ class SudukoUtilityTests: XCTestCase {
     func testSolve(){
         let d = RawSudukoData(size: 9, data: [UInt8(1)])
         let s = DancingLinks(data: d)
-      
-        try? s.solve()
+        /*
+         0010100
+         1001001
+         0110010
+         1001010
+         0100001
+         0001101
+         */
+        let a = [
+            0,0,1,0,1,0,0,
+            1,0,0,1,0,0,1,
+            0,1,1,0,0,1,0,
+            1,0,0,1,0,1,0,
+            0,1,0,0,0,0,1,
+            0,0,0,1,1,0,1
+        ]
+        let headerPtr = s.makeMatrix(from: a, size: 7)
+        s.debugPrintMatrix(headPtr: headerPtr)
+
+        
         
         
     }
