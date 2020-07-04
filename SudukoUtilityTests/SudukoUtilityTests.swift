@@ -192,6 +192,9 @@ class SudukoUtilityTests: XCTestCase {
         ]
         let headerPtr = s.makeMatrix(from: a, size: 7)
         s.debugPrintMatrix(headPtr: headerPtr)
+        try? s.solve()
+        print("solution set : \(s.solutionSet)")
+       // s.debugPrintMatrix(headPtr: headerPtr)
 
         
         
