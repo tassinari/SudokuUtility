@@ -222,16 +222,6 @@ class DancingLinks{
         guard let col = node.header else {
             return
         }
-        let s = """
-        
-        _____________
-        Covering column \(col.top!.coordinate.column)
-        setting left's ( \(col.left!.top!.coordinate.column)) right to \(col.right!.top!.coordinate.column)
-        setting rights's ( \(col.right!.top!.coordinate.column)) left to \(col.left!.top!.coordinate.column)
-        ___________________
-        """
-        let tmp = !col.covered
-        
         if !col.covered{
             col.left?.right = col.right
             col.right?.left = col.left
@@ -245,7 +235,6 @@ class DancingLinks{
                 self.columnHead = right
             }
             
-           // print(s)
         }
         for node in col.items{
             var n : DLXNode? = node.right
@@ -259,26 +248,6 @@ class DancingLinks{
                 }
                 n = n?.right
             } while(n != node && n != nil)
-        }
-        let s2 = """
-        
-        After the operation:
-        _____________
-        The Column: \(col.top!.coordinate.column)
-        right is set to \(col.right!.top!.coordinate.column)
-        left is set to \(col.left!.top!.coordinate.column)
-        
-        The Column's right: \(col.right!.top!.coordinate.column)
-        right is set to \(col.right!.right!.top!.coordinate.column)
-        left is set to \(col.right!.left!.top!.coordinate.column)
-        
-        The Column's left: \(col.left!.top!.coordinate.column)
-        right is set to \(col.left!.right!.top!.coordinate.column)
-        left is set to \(col.left!.left!.top!.coordinate.column)
-        ___________________
-        """
-        if(tmp){
-            //print(s2)
         }
         
     }
