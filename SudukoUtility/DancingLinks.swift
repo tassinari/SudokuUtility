@@ -76,7 +76,7 @@ class DancingLinks{
     
     internal var internalSolutionSet : [DLXNode] = []
     internal var columnHead : DLXNode?
-    var solutionSet : [[DLXNode]] = []
+    var solutionSet : [DLXNode] = []
     
     init(data : RawSudukoData) {
         self.data = data
@@ -265,6 +265,9 @@ class DancingLinks{
         if(columnHead == nil ){
             columnHead = col
         }
+        if(col.top?.coordinate.column ?? 0 < columnHead?.top?.coordinate.column ?? 0){
+            columnHead = col
+        }
         for node in col.items{
             var n : DLXNode? = node
             repeat{
@@ -287,7 +290,7 @@ class DancingLinks{
     public func solve() throws  {
         guard let header = self.columnHead else{
             //solved
-            self.solutionSet.append(self.internalSolutionSet)
+            self.solutionSet = self.internalSolutionSet
             return
         }
 

@@ -170,22 +170,38 @@ class SudukoUtilityTests: XCTestCase {
         }while(current != matrixPointer)
         
     }
-    func testOversolve(){
+    func testSanityAfterSolve(){
+        func colHeadCount(nodePtr : DLXNode) -> Int{
+            var i = 0
+            var n : DLXNode? = nodePtr
+            repeat{
+                i += 1
+                n = n?.right
+            }while(n != nodePtr)
+            return i
+        }
         let a =  [
-                   0,0,1,0,1,0,0,
-                   1,0,0,1,0,0,1,
-                   0,1,1,0,0,1,0,
-                   1,0,0,1,0,1,0,
-                   0,1,0,0,0,0,1,
-                   0,0,0,1,1,0,1
-               ]
+            1,1,1,0,1,1,1,
+            0,0,0,1,0,0,0,
+            1,1,1,0,0,1,0,
+            0,0,0,0,0,0,1,
+            0,0,0,0,0,1,0,
+            0,0,0,1,1,0,0
+        ]
         let s = DancingLinks(data: RawSudukoData(size: 9, data: [UInt8(1)]))
-        let _ = s.makeMatrix(from: a, size: 7)
-        //  s.debugPrintMatrix(headPtr: headerPtr)
+        let headPtr = s.makeMatrix(from: a, size: 7)
+        XCTAssertEqual(headPtr, s.columnHead)
+        var c = colHeadCount(nodePtr: headPtr)
+        XCTAssert(c == 7, "header couunt wrong (counted \(c))")
+        
         try? s.solve()
-        print(s.solutionSet)
+        
+        c = colHeadCount(nodePtr: headPtr)
+        XCTAssert(c == 7, "header count wrong (counted \(c))")
+        XCTAssertEqual(headPtr, s.columnHead)
         
     }
+    
     
     func testSolve(){
        
@@ -200,7 +216,7 @@ class SudukoUtilityTests: XCTestCase {
             0,1,0,0,0,0,1,
             0,0,0,1,1,0,1
         ],
-                    "solution" : [[3,0,4]]
+                    "solution" : [3,0,4]
         ]
         //5043
         , [   "data" : [
@@ -211,7 +227,7 @@ class SudukoUtilityTests: XCTestCase {
             0,0,0,0,0,1,0,
             0,1,0,1,0,0,0
         ],
-                    "solution" : [[0,4,5,3]]
+                    "solution" : [0,4,5,3]
         ]
         //235
         ,  [   "data" : [
@@ -222,7 +238,7 @@ class SudukoUtilityTests: XCTestCase {
             0,0,0,0,0,1,0,
             0,0,0,1,1,0,0
         ],
-                    "solution" : [[2,3,5]]
+                    "solution" : [2,3,5]
         ]
         //01 && 253
         ,  [   "data" : [
@@ -233,7 +249,7 @@ class SudukoUtilityTests: XCTestCase {
             0,0,0,0,0,1,0,
             0,0,0,1,1,0,0
         ],
-               "solution" : [ [0,1],[2,5,3]]
+               "solution" : [2,5,3]
         ]
         ,  [   "data" : [
             1,1,1,0,1,1,1,
@@ -243,26 +259,22 @@ class SudukoUtilityTests: XCTestCase {
             0,0,0,0,0,1,0,
             0,0,0,1,0,0,0
         ],
-                    "solution" : [[0,5],[2,3]]
+                    "solution" : [2,3]
         ]
         ]
         for item in testData{
             let s = DancingLinks(data: RawSudukoData(size: 9, data: [UInt8(1)]))
-            guard let matrix = item["data"] as? [Int], let expectedSolutionSetArray = item["solution"] as? [[Int]]else {
+            guard let matrix = item["data"], let expectedSolutionSetArray = item["solution"] else {
                 XCTFail("Unable to produce test data")
                 return
             }
             let _ = s.makeMatrix(from: matrix, size: 7)
             //  s.debugPrintMatrix(headPtr: headerPtr)
             try? s.solve()
-            if(s.solutionSet.count != expectedSolutionSetArray.count){
-                XCTFail( "Solution sets count mismatch (solution set : \(s.solutionSet) : expected (\(expectedSolutionSetArray))")
-                return
-            }
-            for (i,solution) in s.solutionSet.enumerated(){
+           
                 
-                XCTAssertEqual(solution.map{Int($0.coordinate.row)}.sorted(), expectedSolutionSetArray[i].sorted())
-            }
+            XCTAssertEqual(s.solutionSet.map{Int($0.coordinate.row)}.sorted(), expectedSolutionSetArray.sorted())
+            
            // XCTAssertEqual(solution.map{Int($0.coordinate.row)}.sorted(), expected.sorted())
            // print("solution set : \(s.solutionSet)")
         
