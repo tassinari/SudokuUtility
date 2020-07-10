@@ -242,7 +242,7 @@ class DancingLinks{
         
         
         for node in col.items{
-            var n : DLXNode? = node.right
+            var n : DLXNode? = node
             repeat{
                 //if we cover the columns top pointer, we must reset the top pointer ??
                 
@@ -251,7 +251,7 @@ class DancingLinks{
                 if(n?.header?.top == n){
                     n?.header?.top = n?.bottom
                 }
-                col.columnCount -= 1
+                n?.header?.columnCount -= 1
                 n = n?.right
             } while(n != node && n != nil)
         }
@@ -274,7 +274,7 @@ class DancingLinks{
                 n?.top?.bottom = n
                 n?.bottom?.top = n
                 n = n?.right
-                col.columnCount += 1
+                n?.header?.columnCount += 1
             } while(n != node)
         }
         col.left?.right = col
@@ -292,7 +292,10 @@ class DancingLinks{
         }
 
         var column = self.getMinimumColumn(header: header)
-       
+        if(column.columnCount == 0){
+             self.uncover(column)
+            return
+        }
         self.cover(column)
     
     

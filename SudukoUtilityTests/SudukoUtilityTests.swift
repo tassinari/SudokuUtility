@@ -200,7 +200,7 @@ class SudukoUtilityTests: XCTestCase {
             0,1,0,0,0,0,1,
             0,0,0,1,1,0,1
         ],
-                    "solution" : [[0,1,2],[3,0,4]]
+                    "solution" : [[3,0,4]]
         ]
         //5043
         , [   "data" : [
@@ -256,7 +256,7 @@ class SudukoUtilityTests: XCTestCase {
             //  s.debugPrintMatrix(headPtr: headerPtr)
             try? s.solve()
             if(s.solutionSet.count != expectedSolutionSetArray.count){
-                 XCTFail( "Solution sets count mismatch")
+                XCTFail( "Solution sets count mismatch (solution set : \(s.solutionSet) : expected (\(expectedSolutionSetArray))")
                 return
             }
             for (i,solution) in s.solutionSet.enumerated(){
