@@ -29,6 +29,7 @@ class DLXNode : Equatable{
     var bottom : DLXNode?
     var coordinate : Coordinate
     var covered = false
+    var columnCount = 0
     var items : [DLXNode] {
         guard let topNode = top else{
             //TODO: better error enumeration
@@ -73,8 +74,10 @@ class DancingLinks{
     private var allColumnPointer : ColumnNode?
     private var allRowPointer : Node?
     
-    internal var solutionSet : [DLXNode] = []
-    internal var columnHead : DLXNode = DLXNode()
+    internal var internalSolutionSet : [DLXNode] = []
+    internal var columnHead : DLXNode?
+    var solutionSet : [[DLXNode]] = []
+    
     init(data : RawSudukoData) {
         self.data = data
         entryPoint =  baseMatrix(size: data.size)
@@ -154,7 +157,7 @@ class DancingLinks{
                 latestRowPtr = nil
             }
             
-           //if one add to matrix
+           //if one (an active node) add to matrix
             if(from[i] == 1){
                 
                 //Columns
@@ -176,6 +179,7 @@ class DancingLinks{
                 }
                 theNewNode.header = colHeader
                 //add new node to bottom of column
+                colHeader.columnCount += 1
                 if let top = colHeader.top{
                     //we have a top node, add to bottom
                     theNewNode.bottom = top
@@ -222,20 +226,21 @@ class DancingLinks{
         guard let col = node.header else {
             return
         }
-        if !col.covered{
-            col.left?.right = col.right
-            col.right?.left = col.left
-            node.covered = true
-            
-            //if the column is the header, get a new header.
-            if(self.columnHead == col){
-                guard let right = col.right else {
-                    return
-                }
-                self.columnHead = right
+        
+        col.left?.right = col.right
+        col.right?.left = col.left
+        node.covered = true
+        
+        //if the column is the header, get a new header.
+        if(self.columnHead == col){
+            guard let right = col.right else {
+                return
             }
-            
+            self.columnHead = right == col ? nil : right
+            //self.columnHead = right
         }
+        
+        
         for node in col.items{
             var n : DLXNode? = node.right
             repeat{
@@ -246,6 +251,7 @@ class DancingLinks{
                 if(n?.header?.top == n){
                     n?.header?.top = n?.bottom
                 }
+                col.columnCount -= 1
                 n = n?.right
             } while(n != node && n != nil)
         }
@@ -255,9 +261,10 @@ class DancingLinks{
         guard let col = node.header else {
             return
         }
-        col.left?.right = col
-        col.right?.left = col
-        node.covered = false
+       
+        if(columnHead == nil ){
+            columnHead = col
+        }
         for node in col.items{
             var n : DLXNode? = node
             repeat{
@@ -267,26 +274,30 @@ class DancingLinks{
                 n?.top?.bottom = n
                 n?.bottom?.top = n
                 n = n?.right
+                col.columnCount += 1
             } while(n != node)
         }
+        col.left?.right = col
+        col.right?.left = col
+        node.covered = false
     }
     
     
     
     public func solve() throws  {
-        let header = self.columnHead
-        if header.left == header{
+        guard let header = self.columnHead else{
             //solved
-            
+            self.solutionSet.append(self.internalSolutionSet)
             return
         }
+
         var column = self.getMinimumColumn(header: header)
-        
+       
         self.cover(column)
     
     
         for row in column.items{
-            solutionSet.append(row)
+            internalSolutionSet.append(row)
             var rowptr : DLXNode? = row
             repeat{
                 guard let rp = rowptr else {
@@ -297,7 +308,7 @@ class DancingLinks{
             } while row != rowptr
             print("recursing")
             try? solve()
-            solutionSet.removeAll(where: { $0 == row})
+            internalSolutionSet.removeAll(where: { $0 == row})
             guard let c = row.header else{
                 throw DancingLinkError.parseError
             }

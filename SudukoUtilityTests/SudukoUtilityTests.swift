@@ -170,31 +170,104 @@ class SudukoUtilityTests: XCTestCase {
         }while(current != matrixPointer)
         
     }
+    func testOversolve(){
+        let a =  [
+                   0,0,1,0,1,0,0,
+                   1,0,0,1,0,0,1,
+                   0,1,1,0,0,1,0,
+                   1,0,0,1,0,1,0,
+                   0,1,0,0,0,0,1,
+                   0,0,0,1,1,0,1
+               ]
+        let s = DancingLinks(data: RawSudukoData(size: 9, data: [UInt8(1)]))
+        let _ = s.makeMatrix(from: a, size: 7)
+        //  s.debugPrintMatrix(headPtr: headerPtr)
+        try? s.solve()
+        print(s.solutionSet)
+        
+    }
     
     func testSolve(){
-        let d = RawSudukoData(size: 9, data: [UInt8(1)])
-        let s = DancingLinks(data: d)
-        /*
-         0010100
-         1001001
-         0110010
-         1001010
-         0100001
-         0001101
-         */
-        let a = [
+       
+    
+        //304
+        let testData  = [
+            [   "data" : [
             0,0,1,0,1,0,0,
             1,0,0,1,0,0,1,
             0,1,1,0,0,1,0,
             1,0,0,1,0,1,0,
             0,1,0,0,0,0,1,
             0,0,0,1,1,0,1
+        ],
+                    "solution" : [[0,1,2],[3,0,4]]
         ]
-        let headerPtr = s.makeMatrix(from: a, size: 7)
-        s.debugPrintMatrix(headPtr: headerPtr)
-        try? s.solve()
-        print("solution set : \(s.solutionSet)")
-       // s.debugPrintMatrix(headPtr: headerPtr)
+        //5043
+        , [   "data" : [
+            1,0,1,0,1,0,0,
+            0,0,0,0,0,0,1,
+            1,1,1,0,0,1,0,
+            0,0,0,0,0,0,1,
+            0,0,0,0,0,1,0,
+            0,1,0,1,0,0,0
+        ],
+                    "solution" : [[0,4,5,3]]
+        ]
+        //235
+        ,  [   "data" : [
+            0,0,0,0,0,0,0,
+            0,0,0,0,0,0,0,
+            1,1,1,0,0,1,0,
+            0,0,0,0,0,0,1,
+            0,0,0,0,0,1,0,
+            0,0,0,1,1,0,0
+        ],
+                    "solution" : [[2,3,5]]
+        ]
+        //01 && 253
+        ,  [   "data" : [
+            1,1,1,0,1,1,1,
+            0,0,0,1,0,0,0,
+            1,1,1,0,0,1,0,
+            0,0,0,0,0,0,1,
+            0,0,0,0,0,1,0,
+            0,0,0,1,1,0,0
+        ],
+               "solution" : [ [0,1],[2,5,3]]
+        ]
+        ,  [   "data" : [
+            1,1,1,0,1,1,1,
+            0,0,0,0,0,0,0,
+            1,1,1,0,0,1,0,
+            0,0,0,1,1,0,1,
+            0,0,0,0,0,1,0,
+            0,0,0,1,0,0,0
+        ],
+                    "solution" : [[0,5],[2,3]]
+        ]
+        ]
+        for item in testData{
+            let s = DancingLinks(data: RawSudukoData(size: 9, data: [UInt8(1)]))
+            guard let matrix = item["data"] as? [Int], let expectedSolutionSetArray = item["solution"] as? [[Int]]else {
+                XCTFail("Unable to produce test data")
+                return
+            }
+            let _ = s.makeMatrix(from: matrix, size: 7)
+            //  s.debugPrintMatrix(headPtr: headerPtr)
+            try? s.solve()
+            if(s.solutionSet.count != expectedSolutionSetArray.count){
+                 XCTFail( "Solution sets count mismatch")
+                return
+            }
+            for (i,solution) in s.solutionSet.enumerated(){
+                
+                XCTAssertEqual(solution.map{Int($0.coordinate.row)}.sorted(), expectedSolutionSetArray[i].sorted())
+            }
+           // XCTAssertEqual(solution.map{Int($0.coordinate.row)}.sorted(), expected.sorted())
+           // print("solution set : \(s.solutionSet)")
+        
+        }
+      
 
         
         
