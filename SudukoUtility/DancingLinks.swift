@@ -8,8 +8,14 @@
 
 import Foundation
 
+
+//MARK: DLXNode
+
 class DLXNode : Equatable{
-    struct Coordinate {
+    struct Coordinate  :  Equatable{
+        static func == (lhs: Coordinate, rhs: Coordinate) -> Bool {
+            return  rhs.column == lhs.column && lhs.row == rhs.row
+           }
         var row : UInt8
         var column : UInt8
     }
@@ -28,7 +34,6 @@ class DLXNode : Equatable{
     var top : DLXNode? = nil
     var bottom : DLXNode?
     var coordinate : Coordinate
-    var covered = false
     var columnCount = 0
     var items : [DLXNode] {
         guard let topNode = top else{
@@ -68,32 +73,33 @@ enum DancingLinkError : Error{
     case parseError
 }
 
-class DancingLinks{
-    private let data : RawSudukoData
-    private var entryPoint : ColumnNode?
-    private var allColumnPointer : ColumnNode?
-    private var allRowPointer : Node?
-    
+//MARK: Dancing Links
+final class DancingLinks{
     internal var internalSolutionSet : [DLXNode] = []
     internal var columnHead : DLXNode?
     var solutionSet : [DLXNode] = []
     
-    init(data : RawSudukoData) {
-        self.data = data
-        entryPoint =  baseMatrix(size: data.size)
+     //MARK: Init
+    required init(from : [Int], size : Int) {
+        self.columnHead = makeMatrix(from: from , size: size)
     }
+    
+    //MARK: Min Column
     internal func getMinimumColumn(header : DLXNode)->DLXNode{
         var lowestColumn = header
         var h = header.right
         while(h != header ){
             
-            if let myColumn = h, myColumn.items.count < lowestColumn.items.count{
+            if let myColumn = h, myColumn.columnCount < lowestColumn.columnCount && myColumn.columnCount > 0{
                 lowestColumn = myColumn
             }
             h = h?.right
         }
         return lowestColumn
     }
+    
+    //MARK: Debug print
+    //TODO: use apple protocol
     public func debugPrintMatrix(headPtr : DLXNode){
         var colCnt = 0
         var next : DLXNode? = headPtr
@@ -122,6 +128,8 @@ class DancingLinks{
         }while headPtr != next && next != nil
         
     }
+    
+    //MARK: Make Matrix
     
     public func makeMatrix(from : [Int], size : Int) -> DLXNode{
         var headerPtr : DLXNode? = nil
@@ -219,9 +227,10 @@ class DancingLinks{
            //FIXME: throw
            return DLXNode()
         }
-        self.columnHead = returnVal
         return returnVal
     }
+    
+    //MARK: Cover
     internal func cover(_ node : DLXNode){
         guard let col = node.header else {
             return
@@ -229,7 +238,6 @@ class DancingLinks{
         
         col.left?.right = col.right
         col.right?.left = col.left
-        node.covered = true
         
         //if the column is the header, get a new header.
         if(self.columnHead == col){
@@ -257,7 +265,8 @@ class DancingLinks{
         }
         
     }
-    internal func uncover(_ node : DLXNode){
+    //MARK: Uncover
+    internal func uncover(_ node : DLXNode){    
         guard let col = node.header else {
             return
         }
@@ -268,26 +277,33 @@ class DancingLinks{
         if(col.top?.coordinate.column ?? 0 < columnHead?.top?.coordinate.column ?? 0){
             columnHead = col
         }
-        for node in col.items{
-            var n : DLXNode? = node
+        var myNode : DLXNode? = col.top
+        repeat {
+            var n : DLXNode? = myNode
             repeat{
-                if(n?.header?.top == n?.bottom){
+                
+                if(n?.header?.top == n?.bottom && n?.coordinate.row ?? 0 < n?.bottom?.coordinate.row ?? 0){
                     n?.header?.top = n
                 }
                 n?.top?.bottom = n
                 n?.bottom?.top = n
-                n = n?.right
                 n?.header?.columnCount += 1
-            } while(n != node)
-        }
+                n = n?.right
+                
+            } while(n != myNode)
+            myNode = myNode?.top
+            
+        }while(col.top != myNode )
         col.left?.right = col
         col.right?.left = col
-        node.covered = false
+    }
+    public func solve(random: Bool) throws {
+       
+        try solve(0)
     }
     
-    
-    
-    public func solve() throws  {
+    //MARK: Solve
+    private func solve(_ i : Int) throws  {
         guard let header = self.columnHead else{
             //solved
             self.solutionSet = self.internalSolutionSet
@@ -297,6 +313,7 @@ class DancingLinks{
         var column = self.getMinimumColumn(header: header)
         if(column.columnCount == 0){
              self.uncover(column)
+           // self.solutionSet = self.internalSolutionSet
             return
         }
         self.cover(column)
@@ -312,8 +329,7 @@ class DancingLinks{
                 self.cover(rp)
                 rowptr = rp.right
             } while row != rowptr
-            print("recursing")
-            try? solve()
+            try? solve( i + 1)
             internalSolutionSet.removeAll(where: { $0 == row})
             guard let c = row.header else{
                 throw DancingLinkError.parseError
@@ -333,243 +349,5 @@ class DancingLinks{
         self.uncover(column)
        
     }
-    
-    internal func baseMatrix(size: UInt8) -> ColumnNode{
-        var entry : ColumnNode?
-        var latestNode : ColumnNode?
-        var rowPointers: [[Node]] = []
-        //Make Columns
-        for (k,type) in ColumnNodeType.allCases.enumerated(){
-            var rowPointer : [Node] = []
-            for i in 0..<size{  //rows
-                for j in 0..<size{  //colmns
-                    let columnNode = ColumnNode(type: type, row: i, column: j)
-                    columnNode.type = type
-                    columnNode.left = latestNode
-                    latestNode?.right = columnNode
-                    latestNode = columnNode
-                    //first one is the entry point
-                    if(k == 0 && j == 0 && i == 0){
-                        entry = columnNode
-                    }
-                    //hook the last to a first for a circular double link list
-                    if( j == size - 1 && i == size - 1 && k == ColumnNodeType.allCases.count - 1){
-                        columnNode.right = entry
-                        entry?.left = columnNode
-                    }
-                    
-                    var prev : Node? = nil
-                    var first : Node? = nil
-                    //every column has size nmber of nodes, but where are they?
-                    for value in 0..<size{
-                        
-                        
-                        
-                        let node = Node()
-                        node.coordinate = Coordinate(row: i, column: j)
-                        switch type {
-                        case .cellConstraint:
-                            node.coordinate = Coordinate(row: i, column: j)
-                        case .rowConstraint:
-                            node.coordinate = Coordinate(row: i, column: value)
-                        case .columnConstraint:
-                            node.coordinate = Coordinate(row: j, column: value)
-                        case .groupConstaint:
-                            node.coordinate = Coordinate(row: groupFromIndex(index: Coordinate(row: i, column: j).index), column: value)
-                        }
-                        node.coordinate?.value = value
-                        node.header = columnNode
-                        node.value = true
-                        node.type = type
-                        node.top = prev
-                        prev?.bottom = node
-                        if(value == 0){
-                            first = node
-                            columnNode.top = node
-                        }
-                        if(value == size - 1){
-                            node.bottom = first
-                            first?.top = node
-                        }
-                        rowPointer.append(node)
-                        prev = node
-                        
-                    }
-                    
-                }
-                
-            }
-            rowPointers.append(rowPointer)
-        }
-        
-        //link every node in same row based on rowPointers
-        if let topRow = rowPointers.first{
-            for i in 0..<topRow.count{
-                var nodes : [Node] = []
-                for row  in rowPointers{
-                    nodes.append(row[i])
-                }
-                //link all nodes
-                for (i, node) in nodes.enumerated(){
-                    if(i == 0){
-                        node.left = nodes[nodes.count - 1]
-                        node.right = nodes[i + 1]
-                    }else if(i == nodes.count - 1){
-                        node.right = nodes[0]
-                        node.left = nodes[i - 1]
-                    }else{
-                        node.left = nodes[i - 1]
-                        node.right = nodes[i + 1]
-                    }
-                }
-                   
-            }
-        }else{
-            //TODO: throw error
-        }
-        
-        //TODO: have this throw for a empty data set( size =0)
-        return entry!
-    }
-    
+}
    
-}
-
-
-
-internal enum ColumnNodeType : CaseIterable{
-    case cellConstraint, rowConstraint, columnConstraint, groupConstaint
-
-}
-
-internal class ColumnNode : Equatable{
-    static func == (lhs: ColumnNode, rhs: ColumnNode) -> Bool {
-        return lhs.row == rhs.row && lhs.column == rhs.column && lhs.type == rhs.type
-    }
-    
-    //FIXME : remove,  tying suuduko impl to this class, need abstract DLX node
-    var type : ColumnNodeType
-    var covered : Bool
-    var top : Node?
-    var left : ColumnNode?
-    var right : ColumnNode?
-    
-    init(type: ColumnNodeType, row : UInt8, column : UInt8) {
-        self.type = type
-        self.covered = false
-        self.row = row
-        self.column = column
-    }
-    
-    var row : UInt8
-    var column : UInt8
-    
-    var items : [Node]? {
-        if let topNode = top{
-            var nodes : [Node] = []
-            var nodePtr : Node? = topNode
-            repeat{
-                nodes.append(nodePtr!)  //can force unwrap, will never be nil
-                nodePtr = nodePtr?.bottom
-            }while(nodePtr != nil && nodePtr != topNode)
-            return nodes
-        }
-        return nil
-    }
-    internal func cover(){
-        //remove node from linked list, but node must keep reference to left tand right
-        self.right?.left = self.left
-        self.left?.right = self.right
-        //remove rows
-        if let items = self.items{
-            for rowNode in items{
-                rowNode.cover()
-            }
-        }
-
-    }
-    internal func uncover(){
-        //reweave in the node into the list
-        self.left?.right = self
-        self.right?.left = self
-
-        //re-add rows
-        if let items = self.items{
-            for rowNode in items{
-                rowNode.uncover()
-            }
-        }
-
-    }
-
-}
-extension ColumnNode : CustomStringConvertible{
-    var description: String {
-        
-        return "type=\(type) r-\(String(describing: self.row)) c-\(String(describing: self.column)) <\(Unmanaged.passUnretained(self as AnyObject).toOpaque().debugDescription)>"
-    }
-    
-}
-
-internal class Node : Equatable, CustomStringConvertible, Hashable{
-    static func == (lhs: Node, rhs: Node) -> Bool {
-        guard lhs.coordinate  != nil else {
-            return false
-        }
-        return lhs.coordinate == rhs.coordinate  && lhs.type == rhs.type && lhs.header == rhs.header
-    }
-    func hash(into hasher: inout Hasher) {
-       guard let t = self.type, let c = self.coordinate else {
-
-        return
-       }
-        hasher.combine(c.index)
-        hasher.combine(c.value)
-        hasher.combine(t)
-    }
-    
-    var header : ColumnNode?
-    var left : Node?
-    var right : Node?
-    var top : Node?
-    var bottom : Node?
-    var coordinate : Coordinate?
-    var value : Bool = false
-    var type : ColumnNodeType?
-    
-    var description: String {
-           
-        return "Node<\( Unmanaged.passUnretained(self as AnyObject).toOpaque().debugDescription)> [value type=\(type.debugDescription) coordinate=(r-\(String(describing: self.coordinate!.row)) c-\(String(describing: self.coordinate!.column)) v \(String(describing: self.coordinate!.value!))]"
-       }
-    internal func cover(){
-        guard let col = self.header, let nodes = col.items else {
-            return
-        }
-        col.left?.right = col.right
-        col.right?.left = col.left
-        for node in nodes{
-            var n = node.right
-            while(n != node){
-                n?.top?.bottom = n?.bottom
-                n?.bottom?.top = n?.top
-                n = node.right
-            }
-        }
-    }
-    internal func uncover(){
-        guard let col = self.header, let nodes = col.items else {
-            return
-        }
-        col.left?.right = col
-        col.right?.left = col
-        for node in nodes{
-            var n = node.right
-            while(n != node){
-                n?.top?.bottom = n
-                n?.bottom?.top = n
-                n = node.right
-            }
-        }
-    }
-    
-}
