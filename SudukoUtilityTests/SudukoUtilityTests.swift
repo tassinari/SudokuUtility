@@ -369,10 +369,23 @@ class SudukoUtilityTests: XCTestCase {
         
     }
 
-    func testPerformanceExample() throws {
+    func testPerformanceOfSolve() throws {
         // This is an example of a performance test case.
         self.measure {
             // Put the code you want to measure the time of here.
+            let a =  [
+                0,1,1,0,1,1,0,
+                1,0,0,1,0,0,1,
+                0,1,1,0,0,1,0,
+                0,0,0,1,0,1,0,
+                1,1,0,0,0,1,1,
+                0,0,1,1,1,0,0,
+                0,0,0,0,1,0,0
+            ]
+            let s = DancingLinks(from: a, size: 7)
+            try? s.solve(random: true, stopBlock: { (solutionSet) -> Bool in
+                return false
+            })
         }
     }
 

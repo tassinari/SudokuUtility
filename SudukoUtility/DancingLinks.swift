@@ -189,7 +189,7 @@ final class DancingLinks{
     public func makeMatrix(from : [Int], size : Int) -> DLXNode{
         var headerPtr : DLXNode? = nil
         let colPointer = DLXNode()
-        var first : DLXNode? = nil
+        var first : DLXNode = DLXNode()
         for i in 0..<size {
             //header
             let n = DLXNode()
@@ -204,7 +204,7 @@ final class DancingLinks{
             headerPtr?.right = n
             n.left = headerPtr
             if (i == size - 1){
-                first?.left = n
+                first.left = n
                 n.right = first
             }
             headerPtr = n
@@ -213,7 +213,7 @@ final class DancingLinks{
         colPointer.right = first
         colPointer.left = headerPtr
         headerPtr?.right = colPointer
-        first?.left = colPointer
+        first.left = colPointer
         
         var row = 0
         var col = 0
@@ -232,19 +232,11 @@ final class DancingLinks{
             if(from[i] == 1){
                 
                 //Columns
-                
-                guard var colHeader : DLXNode = first else{
-                    //FIXME: throw
-                    return DLXNode()
-                }
+                var colHeader : DLXNode = first
                 let theNewNode = DLXNode(DLXNode.Coordinate(row: UInt8(row), column: UInt8(col)))
                 //get col header
                 for _ in 0..<col{
-                    guard let c = colHeader.right else{
-                        //FIXME: throw
-                        return DLXNode()
-                    }
-                    colHeader = c
+                    colHeader = colHeader.right
                     
                 }
                 theNewNode.header = colHeader
