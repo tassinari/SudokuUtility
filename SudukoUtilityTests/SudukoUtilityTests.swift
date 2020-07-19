@@ -205,7 +205,27 @@ class SudukoUtilityTests: XCTestCase {
         
         
     }
-    
+    func testSolveNoSolution(){
+        
+        let testData  = [
+                   
+                   1,0,1,0,1,0,0,
+                   1,0,0,1,0,0,1,
+                   1,1,1,0,0,1,0,
+                   1,0,0,1,0,1,0,
+                   1,1,0,0,0,0,1,
+                   1,0,0,1,1,0,1
+             ]
+        
+        let s = DancingLinks(from: testData, size: 7)
+        do {
+            try s.solve(random: false)
+            XCTAssertEqual([], s.solutionSet)
+        } catch _ {
+            XCTFail("Cannot setup test data")
+        }
+       
+    }
 
     func testSolve(){
        
