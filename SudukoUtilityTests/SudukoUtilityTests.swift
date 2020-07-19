@@ -170,69 +170,43 @@ class SudukoUtilityTests: XCTestCase {
 //        }while(current != matrixPointer)
         
     }
+    
     func testSanityAfterSolve(){
-        func colHeadCount(nodePtr : DLXNode) -> [[DLXNode.Coordinate]]{
+        func colHeadCount(head : DLXNode) -> [[DLXNode.Coordinate]]{
             var c : [[DLXNode.Coordinate]] = []
-            var n : DLXNode? = nodePtr
-            repeat{
-                var node = n?.top
+            var n : DLXNode = head.right
+            while(n != head){
+                var node = n.top
                 var coords : [DLXNode.Coordinate] = []
                 repeat{
                     coords.append(node!.coordinate)
                     node = node?.bottom
-                }while(node != n?.top)
+                }while(node != n.top)
                 c.append(coords)
-                n = n?.right
-            }while(n != nodePtr)
+                n = n.right
+            }
             return c
         }
-        let a =  [
-            1,1,1,0,1,1,1,
-            0,0,0,1,0,0,0,
-            1,1,1,0,0,1,0,
-            0,0,0,0,0,0,1,
-            0,0,0,0,0,1,0,
-            0,0,0,1,1,0,0
-        ]
-        let s = DancingLinks(from: a, size: 7)
-        guard let headPtr = s.columnHead else{
-            XCTFail("cannot set up test")
-            return
-        }
-        XCTAssertEqual(headPtr, s.columnHead)
-        let colBefore = colHeadCount(nodePtr: headPtr)
-        XCTAssert(colBefore.count == 7, "header couunt wrong (counted \(colBefore.count))")
-        
-        try? s.solve(random: false)
-        
-        let colAfter = colHeadCount(nodePtr: headPtr)
-        XCTAssert(colAfter.count == 7, "header count wrong (counted \(colAfter.count))")
-        XCTAssertEqual(headPtr, s.columnHead)
-        XCTAssertEqual(colBefore, colAfter)
-    }
-    
-    func testMultipleSolutionSolve(){
-        
         let a =  [
             0,1,1,0,1,1,0,
             1,0,0,1,0,0,1,
             0,1,1,0,0,1,0,
-            1,0,0,1,0,1,0,
-            1,0,0,0,0,0,1,
-            0,0,1,1,1,0,0
+            0,0,0,1,0,1,0,
+            1,1,0,0,0,1,1,
+            0,0,1,1,1,0,0,
+            0,0,0,0,1,0,0
         ]
-        for _ in 0..<1{
-            let s = DancingLinks(from: a, size: 7)
-            //  s.debugPrintMatrix(headPtr: headerPtr)
-            do {
-                try s.solve(random: false)
-            } catch let e {
-                print("error \(e)")
-                XCTFail("error!")
-            }
-            print(s.solutionSet.map{$0.coordinate.row})
-        }
+        let s = DancingLinks(from: a, size: 7)
+        let countBefore = colHeadCount(head: s.root)
+        try? s.solve(random: true)
+        let countAfter = colHeadCount(head: s.root)
+        XCTAssert(countBefore == countAfter)
+        
+        
+        
     }
+    
+
     func testSolve(){
        
     
@@ -246,20 +220,21 @@ class SudukoUtilityTests: XCTestCase {
             0,1,0,0,0,0,1,
             0,0,0,1,1,0,1
         ],
-                    "solution" : [3,0,4]
+                    "solution" : [[3,0,4]]
         ]
-        //5043
-        , [   "data" : [
+////        //5043
+        ,
+            [   "data" : [
             1,0,1,0,1,0,0,
             0,0,0,0,0,0,1,
             1,1,1,0,0,1,0,
-            0,0,0,0,0,0,1,
+            0,0,0,1,1,0,0,
             0,0,0,0,0,1,0,
             0,1,0,1,0,0,0
         ],
-                    "solution" : [0,4,5,3]
+                    "solution" : [ [0,4,5,1], [1,2,3]]
         ]
-        //235
+//        //235
         ,  [   "data" : [
             0,0,0,0,0,0,0,
             0,0,0,0,0,0,0,
@@ -268,9 +243,9 @@ class SudukoUtilityTests: XCTestCase {
             0,0,0,0,0,1,0,
             0,0,0,1,1,0,0
         ],
-                    "solution" : [2,3,5]
+                    "solution" : [[2,3,5]]
         ]
-        //01 && 253
+//        //01 && 253
         ,  [   "data" : [
             1,1,1,0,1,1,1,
             0,0,0,1,0,0,0,
@@ -279,7 +254,7 @@ class SudukoUtilityTests: XCTestCase {
             0,0,0,0,0,1,0,
             0,0,0,1,1,0,0
         ],
-               "solution" : [2,5,3]
+               "solution" : [ [0,1],[2,5,3]]
         ]
         ,  [   "data" : [
             1,1,1,0,1,1,1,
@@ -289,21 +264,26 @@ class SudukoUtilityTests: XCTestCase {
             0,0,0,0,0,1,0,
             0,0,0,1,0,0,0
         ],
-                    "solution" : [2,3]
+               "solution" : [[2,3],[0,5]]
         ]
         ]
         for item in testData{
            
-            guard let matrix = item["data"], let expectedSolutionSetArray = item["solution"] else {
+            guard let matrix = item["data"] as? [Int], let expectedSolutionSetArray = item["solution"] as? [[Int]] else {
                 XCTFail("Unable to produce test data")
                 return
             }
+            
              let s = DancingLinks(from: matrix, size: 7)
             //  s.debugPrintMatrix(headPtr: headerPtr)
-            try? s.solve(random: true)
+            try? s.solve(random: false)
            
                 
-            XCTAssertEqual(s.solutionSet.map{Int($0.coordinate.row)}.sorted(), expectedSolutionSetArray.sorted())
+            //XCTAssertEqual(s.solutionSet.map{Int($0.coordinate.row)}.sorted(), expectedSolutionSetArray.sorted())
+            let sortedAnswers = s.solutionSet.map { (nodeArray) -> [Int] in
+                return nodeArray.map{Int($0.coordinate.row)}.sorted()
+            }
+            XCTAssertEqual(Set(sortedAnswers), Set(expectedSolutionSetArray.map{$0.sorted()}))
             
            // XCTAssertEqual(solution.map{Int($0.coordinate.row)}.sorted(), expected.sorted())
            // print("solution set : \(s.solutionSet)")

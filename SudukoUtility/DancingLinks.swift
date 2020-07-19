@@ -28,27 +28,32 @@ class DLXNode : Equatable{
     init(){
         self.coordinate = Coordinate(row: 0, column: 0)
     }
-    var header : DLXNode?
-    var left : DLXNode?
-    var right : DLXNode?
-    var top : DLXNode? = nil
-    var bottom : DLXNode?
+    var header : DLXNode!
+    var left : DLXNode!
+    var right : DLXNode!
+    var top : DLXNode!
+    var bottom : DLXNode!
     var coordinate : Coordinate
     var columnCount = 0
-    var items : [DLXNode] {
-        guard let topNode = top else{
-            //TODO: better error enumeration
-            return []
-        }
-        var nodes : [DLXNode] = []
-        var nodePtr : DLXNode? = topNode
-        repeat{
-            nodes.append(nodePtr!)  //can force unwrap, will never be nil
-            nodePtr = nodePtr?.bottom
-        }while( nodePtr != topNode)
-        return nodes
+    var tmp = false
+   
+    enum TraverseDirection{
+        case up, down, left, right
     }
-    
+    private func next( forDirection : TraverseDirection) -> DLXNode{
+        switch forDirection {
+        case .up:
+            return self.top
+        case .down:
+            return self.bottom
+        case .left:
+            return self.left
+        case .right:
+            return self.right
+            
+        }
+    }
+
     
 }
 
@@ -68,34 +73,47 @@ extension DLXNode : CustomStringConvertible{
     }
     
 }
-enum DancingLinkError : Error{
+
+//MARK:  Dancing Linke Error
+
+struct DancingLinksError : Error  {
     
-    case parseError
+    enum DancingLinksErrorType{
+        case parseError, traverseError
+    }
+    var localizedDescription : String {
+        return debugInfo
+    }
+    
+    let type : DancingLinksErrorType
+    let debugInfo :String
 }
 
 //MARK: Dancing Links
 final class DancingLinks{
     internal var internalSolutionSet : [DLXNode] = []
-    internal var columnHead : DLXNode?
-    var solutionSet : [DLXNode] = []
+    internal var root : DLXNode = DLXNode()
+    internal var size : Int
+    private var lastColumn : DLXNode?
+    var solutionSet : [[DLXNode]] = []
     
      //MARK: Init
     required init(from : [Int], size : Int) {
-        self.columnHead = makeMatrix(from: from , size: size)
+        self.size = size
+        self.root = makeMatrix(from: from , size: size)
     }
     
     //MARK: Min Column
-    internal func getMinimumColumn(header : DLXNode)->DLXNode{
-        var lowestColumn = header
-        var h = header.right
-        while(h != header ){
-            
-            if let myColumn = h, myColumn.columnCount < lowestColumn.columnCount && myColumn.columnCount > 0{
-                lowestColumn = myColumn
+    internal func getMinimumColumn()->DLXNode{
+        var node : DLXNode = root.right
+        var minNode : DLXNode = node
+        while(node != root){
+            if(node.columnCount < minNode.columnCount && node.columnCount > 0){
+                minNode = node
             }
-            h = h?.right
+            node = node.right
         }
-        return lowestColumn
+        return minNode
     }
     
     //MARK: Debug print
@@ -128,16 +146,53 @@ final class DancingLinks{
         }while headPtr != next && next != nil
         
     }
+    public func debugPrintHeaderConnections()->String{
+        let max = 20
+        var count = 0
+        var loopBegin = -1
+        var loopEnd = -1
+       
+        var nodes : [DLXNode] = [root]
+        var node = root.right
+        repeat{
+            guard let n = node else{
+                return "NIL found in list"
+            }
+            if let index = nodes.lastIndex(of: n){
+                loopBegin = index
+                loopEnd = count
+                break
+            }
+            nodes.append(n)
+            count += 1
+            node = node?.right
+        }while count < max && node != root
+        var str = ""
+        if(loopBegin >= 0 && loopEnd >= 0){
+            str.append("Loop found \(loopEnd) -> \(loopBegin)\n")
+        }
+        for (i,node) in nodes.enumerated(){
+            str.append("""
+                \(i)) (col \(node.top?.coordinate.column)) -- <\(Unmanaged.passUnretained(node as AnyObject).toOpaque().debugDescription)> ==>
+            """)
+        }
+        
+        return str
+        
+    }
     
     //MARK: Make Matrix
     
     public func makeMatrix(from : [Int], size : Int) -> DLXNode{
         var headerPtr : DLXNode? = nil
+        let colPointer = DLXNode()
         var first : DLXNode? = nil
         //TODO: optimize, move down to main for loop
         for i in 0..<size {
             //header
             let n = DLXNode()
+            n.tmp = true
+            n.coordinate.column = UInt8(i)
             n.header = n
             if(i == 0){
                 first = n
@@ -152,6 +207,12 @@ final class DancingLinks{
             }
             headerPtr = n
         }
+        //Have all the coluumn nodes made, now weave in the colPointer (root) between first and headerPtr
+        colPointer.right = first
+        colPointer.left = headerPtr
+        headerPtr?.right = colPointer
+        first?.left = colPointer
+        
         var row = 0
         var col = 0
         var rowPtr : DLXNode? = nil
@@ -187,21 +248,23 @@ final class DancingLinks{
                 }
                 theNewNode.header = colHeader
                 //add new node to bottom of column
-                colHeader.columnCount += 1
-                if let top = colHeader.top{
-                    //we have a top node, add to bottom
-                    theNewNode.bottom = top
-                    theNewNode.top = top.top
-                    top.top?.bottom = theNewNode
-                    top.top = theNewNode
+               
+                if colHeader.columnCount != 0{
+                    //we have a node, add to bottom
+                    theNewNode.bottom = colHeader
+                    theNewNode.top = colHeader.top
+                    colHeader.top.bottom = theNewNode
+                    colHeader.top = theNewNode
                     
                 }else{
                     //No top node, make this the first
                     colHeader.top = theNewNode
-                    theNewNode.top = theNewNode
-                    theNewNode.bottom = theNewNode
+                    colHeader.bottom = theNewNode
+                    theNewNode.top = colHeader
+                    theNewNode.bottom = colHeader
                     
                 }
+                 colHeader.columnCount += 1
                 
                 //Rows
                 if rowPtr == nil {
@@ -223,79 +286,43 @@ final class DancingLinks{
                 latestRowPtr = nil
             }
         }
-        guard let returnVal : DLXNode = first else{
-           //FIXME: throw
-           return DLXNode()
-        }
-        return returnVal
+        return colPointer
     }
     
     //MARK: Cover
-    internal func cover(_ node : DLXNode){
-        guard let col = node.header else {
-            return
-        }
+    internal func cover(_ col : DLXNode){
         
-        col.left?.right = col.right
-        col.right?.left = col.left
-        
-        //if the column is the header, get a new header.
-        if(self.columnHead == col){
-            guard let right = col.right else {
-                return
+        col.left.right = col.right
+        col.right.left = col.left
+        var next : DLXNode = col.bottom
+        while(next != col){
+            var right = next.right
+            while(right != next){
+                right?.top.bottom = right?.bottom
+                right?.bottom.top = right?.top
+                right?.header.columnCount -= 1
+                right = right?.right
             }
-            self.columnHead = right == col ? nil : right
-            //self.columnHead = right
+            next = next.bottom
         }
-        
-        
-        for node in col.items{
-            var n : DLXNode? = node
-            repeat{
-                //if we cover the columns top pointer, we must reset the top pointer ??
-                
-                n?.top?.bottom = n?.bottom
-                n?.bottom?.top = n?.top
-                if(n?.header?.top == n){
-                    n?.header?.top = n?.bottom
-                }
-                n?.header?.columnCount -= 1
-                n = n?.right
-            } while(n != node && n != nil)
-        }
-        
     }
+
     //MARK: Uncover
-    internal func uncover(_ node : DLXNode){    
-        guard let col = node.header else {
-            return
-        }
-       
-        if(columnHead == nil ){
-            columnHead = col
-        }
-        if(col.top?.coordinate.column ?? 0 < columnHead?.top?.coordinate.column ?? 0){
-            columnHead = col
-        }
-        var myNode : DLXNode? = col.top
-        repeat {
-            var n : DLXNode? = myNode
-            repeat{
-                
-                if(n?.header?.top == n?.bottom && n?.coordinate.row ?? 0 < n?.bottom?.coordinate.row ?? 0){
-                    n?.header?.top = n
-                }
-                n?.top?.bottom = n
-                n?.bottom?.top = n
-                n?.header?.columnCount += 1
-                n = n?.right
-                
-            } while(n != myNode)
-            myNode = myNode?.top
-            
-        }while(col.top != myNode )
-        col.left?.right = col
-        col.right?.left = col
+    internal func uncover(_ col : DLXNode){
+        
+       var next = col.top
+       while(next != col){
+           var left = next?.left
+           while(left != next){
+               left?.top.bottom = left
+               left?.bottom.top = left
+               left?.header.columnCount += 1
+               left = left?.left
+           }
+           next = next?.top
+       }
+        col.left.right = col
+        col.right.left = col
     }
     public func solve(random: Bool) throws {
        
@@ -304,50 +331,56 @@ final class DancingLinks{
     
     //MARK: Solve
     private func solve(_ i : Int) throws  {
-        guard let header = self.columnHead else{
+        
+        if root.right == root && root.left == root{
             //solved
-            self.solutionSet = self.internalSolutionSet
-            return
+            self.solutionSet.append( self.internalSolutionSet )
+            if let last = self.lastColumn{
+                uncover(last)
+                self.lastColumn = nil
+                return
+            }
+            
         }
-
-        var column = self.getMinimumColumn(header: header)
-        if(column.columnCount == 0){
-             self.uncover(column)
-           // self.solutionSet = self.internalSolutionSet
+        
+        let column = self.getMinimumColumn()
+        
+        if(column.columnCount <= 0){
+           // uncover(column)
             return
         }
         self.cover(column)
-    
-    
-        for row in column.items{
+        self.lastColumn = column
+        var row : DLXNode = column.bottom
+        while row != column{
             internalSolutionSet.append(row)
-            var rowptr : DLXNode? = row
-            repeat{
-                guard let rp = rowptr else {
-                    throw DancingLinkError.parseError
-                }
-                self.cover(rp)
-                rowptr = rp.right
-            } while row != rowptr
-            try? solve( i + 1)
-            internalSolutionSet.removeAll(where: { $0 == row})
-            guard let c = row.header else{
-                throw DancingLinkError.parseError
+            
+            //cover to right
+            var right : DLXNode = row.right
+            while(row != right){
+                self.lastColumn = right.header
+                 cover(right.header)
+                
+                right = right.right
             }
-            rowptr = row
-            repeat {
-                guard let rp = rowptr else {
-                    throw DancingLinkError.parseError
-                }
-                self.uncover(rp)
-                rowptr = rp.right
-            }while row != rowptr
-            column = c
+            
+            try solve(i + 1)
             
             
+            //uncover to left
+            var left : DLXNode = row.left
+            while(row != left){
+                uncover(left.header)
+                self.lastColumn = nil
+                left = left.left
+            }
+            
+            internalSolutionSet.removeAll(where: { $0 == row})
+            row = row.bottom
         }
+        self.lastColumn = nil
         self.uncover(column)
-       
+        
     }
 }
-   
+
