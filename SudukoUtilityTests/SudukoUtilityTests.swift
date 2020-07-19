@@ -198,12 +198,62 @@ class SudukoUtilityTests: XCTestCase {
         ]
         let s = DancingLinks(from: a, size: 7)
         let countBefore = colHeadCount(head: s.root)
-        try? s.solve(random: true)
+        var callCount = 0
+        try? s.solve(random: true, stopBlock: { (solutionSet) -> Bool in
+            callCount += 1
+            return false
+        })
+        XCTAssert(callCount == 3, "Solution block called more than expected")
         let countAfter = colHeadCount(head: s.root)
         XCTAssert(countBefore == countAfter)
         
         
         
+    }
+    func testStopCallBackStopsOnMultipleSolutionMatrix(){
+        let a =  [
+            0,1,1,0,1,1,0,
+            1,0,0,1,0,0,1,
+            0,1,1,0,0,1,0,
+            0,0,0,1,0,1,0,
+            1,1,0,0,0,1,1,
+            0,0,1,1,1,0,0,
+            0,0,0,0,1,0,0
+        ]
+        let s = DancingLinks(from: a, size: 7)
+        var callCount = 0
+        try? s.solve(random: true, stopBlock: { (solutionSet) -> Bool in
+            callCount += 1
+            return true
+        })
+        XCTAssert(callCount == 3, "Callback count off")
+        XCTAssert(s.solutionSet.count == 0,"Too many solutions found")
+    }
+    func testThrowsOnTooManyRecursions(){
+        let a =  [
+            0,1,1,0,1,1,0,
+            0,1,1,0,1,1,0,
+            0,1,1,0,0,1,0,
+            1,0,0,1,1,0,1
+            
+        ]
+        var errorThrown = false
+        let s = DancingLinks(from: a, size: 7)
+        s.maxRecursionDepth = 1
+        do {
+            try s.solve(random: true, stopBlock: { (solutionSet) -> Bool in
+                return false
+            })
+            
+        } catch let error {
+            guard let e = error as? DancingLinksError else{
+                XCTFail("Wrong error thrown")
+                return
+            }
+            errorThrown = e.type == .maxRecursionDepthBreached
+        }
+        XCTAssert(errorThrown, "Error not thrown or was wrong")
+       
     }
     func testSolveNoSolution(){
         
@@ -219,7 +269,9 @@ class SudukoUtilityTests: XCTestCase {
         
         let s = DancingLinks(from: testData, size: 7)
         do {
-            try s.solve(random: false)
+            try s.solve(random: true, stopBlock: { (solutionSet) -> Bool in
+                return false
+            })
             XCTAssertEqual([], s.solutionSet)
         } catch _ {
             XCTFail("Cannot setup test data")
@@ -296,8 +348,9 @@ class SudukoUtilityTests: XCTestCase {
             
              let s = DancingLinks(from: matrix, size: 7)
             //  s.debugPrintMatrix(headPtr: headerPtr)
-            try? s.solve(random: false)
-           
+            try? s.solve(random: true, stopBlock: { (solutionSet) -> Bool in
+                return false
+            })
                 
             //XCTAssertEqual(s.solutionSet.map{Int($0.coordinate.row)}.sorted(), expectedSolutionSetArray.sorted())
             let sortedAnswers = s.solutionSet.map { (nodeArray) -> [Int] in

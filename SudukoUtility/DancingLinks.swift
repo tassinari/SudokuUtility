@@ -15,7 +15,7 @@ class DLXNode : Equatable{
     struct Coordinate  :  Equatable{
         static func == (lhs: Coordinate, rhs: Coordinate) -> Bool {
             return  rhs.column == lhs.column && lhs.row == rhs.row
-           }
+        }
         var row : UInt8
         var column : UInt8
     }
@@ -36,7 +36,7 @@ class DLXNode : Equatable{
     var coordinate : Coordinate
     var columnCount = 0
     var tmp = false
-   
+    
     enum TraverseDirection{
         case up, down, left, right
     }
@@ -53,7 +53,7 @@ class DLXNode : Equatable{
             
         }
     }
-
+    
     
 }
 
@@ -79,7 +79,7 @@ extension DLXNode : CustomStringConvertible{
 struct DancingLinksError : Error  {
     
     enum DancingLinksErrorType{
-        case parseError, traverseError
+        case parseError, maxRecursionDepthBreached
     }
     var localizedDescription : String {
         return debugInfo
@@ -91,13 +91,16 @@ struct DancingLinksError : Error  {
 
 //MARK: Dancing Links
 final class DancingLinks{
+    
     internal var internalSolutionSet : [DLXNode] = []
     internal var root : DLXNode = DLXNode()
     internal var size : Int
     private var lastColumn : DLXNode?
     var solutionSet : [[DLXNode]] = []
+    private var stopBlock : (([[Int]])->Bool)?
+    var maxRecursionDepth = 500
     
-     //MARK: Init
+    //MARK: Init
     required init(from : [Int], size : Int) {
         self.size = size
         self.root = makeMatrix(from: from , size: size)
@@ -123,9 +126,9 @@ final class DancingLinks{
         var next : DLXNode? = headPtr
         repeat{
             print("Column: \(colCnt)")
-             print("Column header:")
+            print("Column header:")
             print(next!)
-             print("Nodes")
+            print("Nodes")
             print("____________")
             guard let node = next?.top else{
                 print("NO TOP NODE PTR!!")
@@ -151,7 +154,7 @@ final class DancingLinks{
         var count = 0
         var loopBegin = -1
         var loopEnd = -1
-       
+        
         var nodes : [DLXNode] = [root]
         var node = root.right
         repeat{
@@ -173,8 +176,8 @@ final class DancingLinks{
         }
         for (i,node) in nodes.enumerated(){
             str.append("""
-                \(i)) (col \(node.top?.coordinate.column)) -- <\(Unmanaged.passUnretained(node as AnyObject).toOpaque().debugDescription)> ==>
-            """)
+                \(i)) (col \(node.top?.coordinate.column ?? 0)) -- <\(Unmanaged.passUnretained(node as AnyObject).toOpaque().debugDescription)> ==>
+                """)
         }
         
         return str
@@ -187,7 +190,6 @@ final class DancingLinks{
         var headerPtr : DLXNode? = nil
         let colPointer = DLXNode()
         var first : DLXNode? = nil
-        //TODO: optimize, move down to main for loop
         for i in 0..<size {
             //header
             let n = DLXNode()
@@ -217,7 +219,7 @@ final class DancingLinks{
         var col = 0
         var rowPtr : DLXNode? = nil
         var latestRowPtr : DLXNode? = nil
-       
+        
         for i in 0..<from.count{
             col = i % size
             row = i / size
@@ -226,7 +228,7 @@ final class DancingLinks{
                 latestRowPtr = nil
             }
             
-           //if one (an active node) add to matrix
+            //if one (an active node) add to matrix
             if(from[i] == 1){
                 
                 //Columns
@@ -238,9 +240,8 @@ final class DancingLinks{
                 let theNewNode = DLXNode(DLXNode.Coordinate(row: UInt8(row), column: UInt8(col)))
                 //get col header
                 for _ in 0..<col{
-                    //TODO: fix return
-                     guard let c = colHeader.right else{
-                         //FIXME: throw
+                    guard let c = colHeader.right else{
+                        //FIXME: throw
                         return DLXNode()
                     }
                     colHeader = c
@@ -248,7 +249,7 @@ final class DancingLinks{
                 }
                 theNewNode.header = colHeader
                 //add new node to bottom of column
-               
+                
                 if colHeader.columnCount != 0{
                     //we have a node, add to bottom
                     theNewNode.bottom = colHeader
@@ -264,7 +265,7 @@ final class DancingLinks{
                     theNewNode.bottom = colHeader
                     
                 }
-                 colHeader.columnCount += 1
+                colHeader.columnCount += 1
                 
                 //Rows
                 if rowPtr == nil {
@@ -306,34 +307,41 @@ final class DancingLinks{
             next = next.bottom
         }
     }
-
+    
     //MARK: Uncover
     internal func uncover(_ col : DLXNode){
         
-       var next = col.top
-       while(next != col){
-           var left = next?.left
-           while(left != next){
-               left?.top.bottom = left
-               left?.bottom.top = left
-               left?.header.columnCount += 1
-               left = left?.left
-           }
-           next = next?.top
-       }
+        var next = col.top
+        while(next != col){
+            var left = next?.left
+            while(left != next){
+                left?.top.bottom = left
+                left?.bottom.top = left
+                left?.header.columnCount += 1
+                left = left?.left
+            }
+            next = next?.top
+        }
         col.left.right = col
         col.right.left = col
     }
-    public func solve(random: Bool) throws {
-       
+    public func solve(random: Bool, stopBlock : @escaping ([[Int]]) -> Bool ) throws {
+        self.stopBlock = stopBlock
         try solve(0)
     }
     
     //MARK: Solve
     private func solve(_ i : Int) throws  {
-        
+        if(i >= self.maxRecursionDepth ){
+            throw DancingLinksError(type: .maxRecursionDepthBreached, debugInfo: "Too many recursions (\(self.maxRecursionDepth)).")
+        }
         if root.right == root && root.left == root{
             //solved
+           
+            let rows = self.solutionSet.map{ return $0.map{ Int($0.coordinate.row)}}
+            if let block = self.stopBlock, block(rows){
+                return
+            }
             self.solutionSet.append( self.internalSolutionSet )
             if let last = self.lastColumn{
                 uncover(last)
@@ -342,24 +350,19 @@ final class DancingLinks{
             }
             
         }
-        
         let column = self.getMinimumColumn()
         
-        if(column.columnCount <= 0){
-           // uncover(column)
-            return
-        }
         self.cover(column)
         self.lastColumn = column
-        var row : DLXNode = column.bottom
-        while row != column{
+        
+        for row in rows(column: column, randomized: true){
             internalSolutionSet.append(row)
             
             //cover to right
             var right : DLXNode = row.right
             while(row != right){
                 self.lastColumn = right.header
-                 cover(right.header)
+                cover(right.header)
                 
                 right = right.right
             }
@@ -374,13 +377,21 @@ final class DancingLinks{
                 self.lastColumn = nil
                 left = left.left
             }
-            
             internalSolutionSet.removeAll(where: { $0 == row})
-            row = row.bottom
         }
+        
         self.lastColumn = nil
         self.uncover(column)
         
+    }
+    private func rows(column: DLXNode ,randomized : Bool) -> [DLXNode] {
+        var rows : [DLXNode] = []
+        var row : DLXNode = column.bottom
+        while row != column{
+            rows.append(row)
+            row = row.bottom
+        }
+        return randomized ? rows.shuffled() : rows
     }
 }
 
