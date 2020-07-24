@@ -7,11 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4851E9F924C4AE13006786DE /* SudokuTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4851E9F824C4AE13006786DE /* SudokuTests.swift */; };
+		4851E9FB24C4AEFE006786DE /* Sudoku.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4851E9FA24C4AEFE006786DE /* Sudoku.swift */; };
 		48A5A708248D0BF600011FFC /* SudukoUtility.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 48A5A6FE248D0BF600011FFC /* SudukoUtility.framework */; };
-		48A5A70D248D0BF600011FFC /* SudukoUtilityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48A5A70C248D0BF600011FFC /* SudukoUtilityTests.swift */; };
+		48A5A70D248D0BF600011FFC /* DancingLinksTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48A5A70C248D0BF600011FFC /* DancingLinksTests.swift */; };
 		48A5A70F248D0BF600011FFC /* SudukoUtility.h in Headers */ = {isa = PBXBuildFile; fileRef = 48A5A701248D0BF600011FFC /* SudukoUtility.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		48A5A719248D0C1100011FFC /* DancingLinks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48A5A718248D0C1100011FFC /* DancingLinks.swift */; };
-		48A5A71B248D49FB00011FFC /* Suduko.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48A5A71A248D49FB00011FFC /* Suduko.swift */; };
+		48A5A71B248D49FB00011FFC /* Suduko_old.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48A5A71A248D49FB00011FFC /* Suduko_old.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -25,14 +27,16 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		4851E9F824C4AE13006786DE /* SudokuTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SudokuTests.swift; sourceTree = "<group>"; };
+		4851E9FA24C4AEFE006786DE /* Sudoku.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sudoku.swift; sourceTree = "<group>"; };
 		48A5A6FE248D0BF600011FFC /* SudukoUtility.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SudukoUtility.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		48A5A701248D0BF600011FFC /* SudukoUtility.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SudukoUtility.h; sourceTree = "<group>"; };
 		48A5A702248D0BF600011FFC /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		48A5A707248D0BF600011FFC /* SudukoUtilityTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SudukoUtilityTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		48A5A70C248D0BF600011FFC /* SudukoUtilityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SudukoUtilityTests.swift; sourceTree = "<group>"; };
+		48A5A70C248D0BF600011FFC /* DancingLinksTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DancingLinksTests.swift; sourceTree = "<group>"; };
 		48A5A70E248D0BF600011FFC /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		48A5A718248D0C1100011FFC /* DancingLinks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DancingLinks.swift; sourceTree = "<group>"; };
-		48A5A71A248D49FB00011FFC /* Suduko.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Suduko.swift; sourceTree = "<group>"; };
+		48A5A71A248D49FB00011FFC /* Suduko_old.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Suduko_old.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -77,7 +81,8 @@
 			children = (
 				48A5A701248D0BF600011FFC /* SudukoUtility.h */,
 				48A5A718248D0C1100011FFC /* DancingLinks.swift */,
-				48A5A71A248D49FB00011FFC /* Suduko.swift */,
+				48A5A71A248D49FB00011FFC /* Suduko_old.swift */,
+				4851E9FA24C4AEFE006786DE /* Sudoku.swift */,
 				48A5A702248D0BF600011FFC /* Info.plist */,
 			);
 			path = SudukoUtility;
@@ -86,7 +91,8 @@
 		48A5A70B248D0BF600011FFC /* SudukoUtilityTests */ = {
 			isa = PBXGroup;
 			children = (
-				48A5A70C248D0BF600011FFC /* SudukoUtilityTests.swift */,
+				48A5A70C248D0BF600011FFC /* DancingLinksTests.swift */,
+				4851E9F824C4AE13006786DE /* SudokuTests.swift */,
 				48A5A70E248D0BF600011FFC /* Info.plist */,
 			);
 			path = SudukoUtilityTests;
@@ -202,8 +208,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				48A5A71B248D49FB00011FFC /* Suduko.swift in Sources */,
+				48A5A71B248D49FB00011FFC /* Suduko_old.swift in Sources */,
 				48A5A719248D0C1100011FFC /* DancingLinks.swift in Sources */,
+				4851E9FB24C4AEFE006786DE /* Sudoku.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -211,7 +218,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				48A5A70D248D0BF600011FFC /* SudukoUtilityTests.swift in Sources */,
+				4851E9F924C4AE13006786DE /* SudokuTests.swift in Sources */,
+				48A5A70D248D0BF600011FFC /* DancingLinksTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -16,8 +16,8 @@ class DLXNode : Equatable{
         static func == (lhs: Coordinate, rhs: Coordinate) -> Bool {
             return  rhs.column == lhs.column && lhs.row == rhs.row
         }
-        var row : UInt8
-        var column : UInt8
+        var row : Int
+        var column : Int
     }
     static func == (lhs: DLXNode, rhs: DLXNode) -> Bool {
         return  ObjectIdentifier(rhs) == ObjectIdentifier(lhs)
@@ -99,7 +99,7 @@ final class DancingLinks{
     var solutionSet : [[DLXNode]] = []
     private var stopBlock : (([[Int]])->Bool)?
     var maxRecursionDepth = 500
-    
+    private var shouldStop = false
     //MARK: Init
     required init(from : [Int], size : Int) {
         self.size = size
@@ -194,7 +194,7 @@ final class DancingLinks{
             //header
             let n = DLXNode()
             n.tmp = true
-            n.coordinate.column = UInt8(i)
+            n.coordinate.column = i
             n.header = n
             if(i == 0){
                 first = n
@@ -233,7 +233,7 @@ final class DancingLinks{
                 
                 //Columns
                 var colHeader : DLXNode = first
-                let theNewNode = DLXNode(DLXNode.Coordinate(row: UInt8(row), column: UInt8(col)))
+                let theNewNode = DLXNode(DLXNode.Coordinate(row: row, column: col))
                 //get col header
                 for _ in 0..<col{
                     colHeader = colHeader.right
@@ -317,24 +317,33 @@ final class DancingLinks{
         col.left.right = col
         col.right.left = col
     }
+    
+    //MARK: Solve
+    
     public func solve(random: Bool, stopBlock : @escaping ([[Int]]) -> Bool ) throws {
+        self.shouldStop = false
         self.stopBlock = stopBlock
         try solve(0)
     }
     
-    //MARK: Solve
+
     private func solve(_ i : Int) throws  {
         if(i >= self.maxRecursionDepth ){
             throw DancingLinksError(type: .maxRecursionDepthBreached, debugInfo: "Too many recursions (\(self.maxRecursionDepth)).")
         }
+        
         if root.right == root && root.left == root{
             //solved
            
+            
+            self.solutionSet.append( self.internalSolutionSet )
             let rows = self.solutionSet.map{ return $0.map{ Int($0.coordinate.row)}}
-            if let block = self.stopBlock, block(rows){
+            
+            if let block = self.stopBlock, block(rows) == true{
+                shouldStop = true
                 return
             }
-            self.solutionSet.append( self.internalSolutionSet )
+            
             if let last = self.lastColumn{
                 uncover(last)
                 self.lastColumn = nil
@@ -348,6 +357,9 @@ final class DancingLinks{
         self.lastColumn = column
         
         for row in rows(column: column, randomized: true){
+            if(shouldStop){
+                break
+            }
             internalSolutionSet.append(row)
             
             //cover to right

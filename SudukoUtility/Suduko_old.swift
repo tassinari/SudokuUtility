@@ -42,13 +42,13 @@ struct RawSudukoData{
 }
 
 
-func groupFromIndex(index : UInt8)-> UInt8{
-    
-    let nChunkIndex = index / 3;
-    let row = nChunkIndex / 9;
-    let column = nChunkIndex % 3;
-    return column + row * 3;
-}
+//func groupFromIndex(index : UInt8)-> UInt8{
+//    
+//    let nChunkIndex = index / 3;
+//    let row = nChunkIndex / 9;
+//    let column = nChunkIndex % 3;
+//    return column + row * 3;
+//}
 
 
 
@@ -231,7 +231,8 @@ internal class Node : Equatable, CustomStringConvertible, Hashable{
                         case .columnConstraint:
                             node.coordinate = Coordinate(row: j, column: value)
                         case .groupConstaint:
-                            node.coordinate = Coordinate(row: groupFromIndex(index: Coordinate(row: i, column: j).index), column: value)
+                            break
+                           // node.coordinate = Coordinate(row: groupFromIndex(index: Coordinate(row: i, column: j).index), column: value)
                         }
                         node.coordinate?.value = value
                         node.header = columnNode
