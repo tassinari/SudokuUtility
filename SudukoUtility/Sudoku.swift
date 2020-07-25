@@ -24,8 +24,55 @@ extension SudokuPuzzle : CustomStringConvertible{
         }
         return str
     }
+    var debugDescription: String {
+        var i = 0
+        return data.reduce("[ ") { (tally, val) -> String in
+            var x = tally
+            
+            x.append(String(val))
+            if i < self.data.count - 1{
+                x.append(" , ")
+            }
+            i += 1
+            return x
+        } + " ]"
+    }
     
 }
+
+extension SudokuPuzzle{
+    
+    func isCorrect() -> Bool{
+        
+        //check every item is a number
+        //TODO: make zeros denote empty
+//        if self.data.contains(0){
+//            return false
+//        }
+       
+        //check 4 constraints
+        var rowArray : [[Int]] = [[Int]](repeating: [], count: size)
+        var colArray : [[Int]] = [[Int]](repeating: [], count: size)
+        var groupArray : [[Int]] = [[Int]](repeating: [], count: size)
+        for i in 0..<self.data.count{
+            let row = i / size
+            let col = i % size
+            let group = groupFromIndex(index: i)
+            rowArray[row].append(self.data[i])
+            colArray[col].append(self.data[i])
+            groupArray[group].append(self.data[i])
+            
+            
+        }
+        let allRowsGood = !rowArray.map { $0.reduce(0,+) == 36 }.contains(false)  //sum each row and check for a false
+        let allColsGood = !colArray.map { $0.reduce(0,+) == 36 }.contains(false)  //sum each col and check for a false
+        let allGroupsGood = !groupArray.map { $0.reduce(0,+) == 36 }.contains(false)  //sum each group and check for a false
+        
+        return allRowsGood && allColsGood && allGroupsGood
+    }
+    
+}
+
 //FIXME: this is tied to a 9*9 suduko
 internal func groupFromIndex(index : Int)-> Int{
     

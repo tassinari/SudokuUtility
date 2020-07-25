@@ -79,6 +79,25 @@ class DancingLinksTests: XCTestCase {
         XCTAssert(callCount == 1, "Callback count off")
         XCTAssert(s.solutionSet.count == 1,"Too many solutions found")
     }
+    func testStopCallBackStopsAfterNTriesOnMultipleSolutionMatrix(){
+          let a =  [
+              0,1,1,0,1,1,0,
+              1,0,0,1,0,0,1,
+              0,1,1,0,0,1,0,
+              0,0,0,1,0,1,0,
+              1,1,0,0,0,1,1,
+              0,0,1,1,1,0,0,
+              0,0,0,0,1,0,0
+          ]
+          let s = DancingLinks(from: a, size: 7)
+          var callCount = 0
+          try? s.solve(random: true, stopBlock: { (solutionSet) -> Bool in
+              callCount += 1
+              return callCount == 2
+          })
+          XCTAssert(callCount == 2, "Callback count off")
+          XCTAssert(s.solutionSet.count == 2,"Too many solutions found")
+      }
     func testThrowsOnTooManyRecursions(){
         let a =  [
             0,1,1,0,1,1,0,
