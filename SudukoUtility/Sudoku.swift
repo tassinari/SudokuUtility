@@ -7,13 +7,108 @@
 //
 
 import Foundation
-
-struct SudokuPuzzle{
+public enum DificultyRating{
+    case easy,medium, hard, impossible
+}
+struct SudokuPuzzleError : Error  {
+    
+    enum SudokuPuzzleErrorType{
+        case noSolutions, multipleSolutions, unsolvable
+    }
+    var localizedDescription : String {
+        return debugInfo
+    }
+    
+    let type : SudokuPuzzleErrorType
+    let debugInfo :String
+}
+//MARK: SudokuPuzzle
+public struct SudokuPuzzle{
     var data : [Int]
     var size : Int
+    
+    init(data : [Int], size : Int){
+        self.data = data
+        self.size = size
+    }
+    init( withDifficulty: DificultyRating) {
+        self.data = []
+        self.size = 9
+    }
 }
+
+//MARK: Solving utilties
+extension SudokuPuzzle{
+    
+    public func solvedCopy() throws -> [Int]{
+        let dl = DancingLinks(withPuzzle: self)
+        do {
+            try dl.solve(random: true) { (answers) -> Bool in
+                   return true
+            }
+            guard let solution = dl.solutionSet.first else {
+                throw SudokuPuzzleError(type: .noSolutions, debugInfo: "No solutions found")
+            }
+            //FIXME: This is returning the rows, need to return a Puzzle
+            return solution.map{$0.coordinate.row}
+        } catch let e {
+            throw e
+        }
+    }
+    public func uniquelySolvable() throws -> Bool{
+        
+        let dl = DancingLinks(withPuzzle: self)
+        do {
+            try dl.solve(random: true) { (answers) -> Bool in
+                return answers.count > 1
+            }
+            return dl.solutionSet.count == 1
+            
+        } catch let e {
+            throw e
+        }
+    }
+    public func errors() -> [(Int,Int)]{
+        
+        return []
+    }
+    public func rate() throws -> DificultyRating{
+        
+        return .easy
+    }
+    func isSolved() -> Bool{
+        
+        //check every item is a number
+        //TODO: make zeros denote empty
+        //        if self.data.contains(0){
+        //            return false
+        //        }
+        
+        //check 4 constraints
+        var rowArray : [[Int]] = [[Int]](repeating: [], count: size)
+        var colArray : [[Int]] = [[Int]](repeating: [], count: size)
+        var groupArray : [[Int]] = [[Int]](repeating: [], count: size)
+        for i in 0..<self.data.count{
+            let row = i / size
+            let col = i % size
+            let group = groupFromIndex(index: i)
+            rowArray[row].append(self.data[i])
+            colArray[col].append(self.data[i])
+            groupArray[group].append(self.data[i])
+            
+            
+        }
+        let allRowsGood = !rowArray.map { $0.reduce(0,+) == 36 }.contains(false)  //sum each row and check for a false
+        let allColsGood = !colArray.map { $0.reduce(0,+) == 36 }.contains(false)  //sum each col and check for a false
+        let allGroupsGood = !groupArray.map { $0.reduce(0,+) == 36 }.contains(false)  //sum each group and check for a false
+        
+        return allRowsGood && allColsGood && allGroupsGood
+    }
+}
+
+//MARK: SudokuPuzzle Description
 extension SudokuPuzzle : CustomStringConvertible{
-    var description: String {
+    public var description: String {
         var str = ""
         for (i,_) in data.enumerated(){
             str.append(String("\(data[i]) "))
@@ -38,40 +133,9 @@ extension SudokuPuzzle : CustomStringConvertible{
         } + " ]"
     }
     
+    
 }
 
-extension SudokuPuzzle{
-    
-    func isCorrect() -> Bool{
-        
-        //check every item is a number
-        //TODO: make zeros denote empty
-//        if self.data.contains(0){
-//            return false
-//        }
-       
-        //check 4 constraints
-        var rowArray : [[Int]] = [[Int]](repeating: [], count: size)
-        var colArray : [[Int]] = [[Int]](repeating: [], count: size)
-        var groupArray : [[Int]] = [[Int]](repeating: [], count: size)
-        for i in 0..<self.data.count{
-            let row = i / size
-            let col = i % size
-            let group = groupFromIndex(index: i)
-            rowArray[row].append(self.data[i])
-            colArray[col].append(self.data[i])
-            groupArray[group].append(self.data[i])
-            
-            
-        }
-        let allRowsGood = !rowArray.map { $0.reduce(0,+) == 36 }.contains(false)  //sum each row and check for a false
-        let allColsGood = !colArray.map { $0.reduce(0,+) == 36 }.contains(false)  //sum each col and check for a false
-        let allGroupsGood = !groupArray.map { $0.reduce(0,+) == 36 }.contains(false)  //sum each group and check for a false
-        
-        return allRowsGood && allColsGood && allGroupsGood
-    }
-    
-}
 
 //FIXME: this is tied to a 9*9 suduko
 internal func groupFromIndex(index : Int)-> Int{
@@ -95,14 +159,46 @@ func matrixToSudoku(_ matrix : [Int]) -> SudokuPuzzle{
     
     return SudokuPuzzle(data: [], size: 0)
 }
+
 internal enum ConstraintType : CaseIterable{
     case cellConstraint, rowConstraint, columnConstraint, groupConstaint
 
 }
 
-class SudokuUtility{
+//MARK: Dancing Links Extension
+
+internal extension DancingLinks {
     
-    func createSquare(ofSize : Int) throws -> SudokuPuzzle{
+    convenience init(withPuzzle: SudokuPuzzle){
+        
+        self.init(from: withPuzzle.data, size: withPuzzle.size)
+        
+    }
+    
+}
+
+//MARK: SuudukoUtility Errors
+
+struct SudokuUtilityError : Error  {
+    
+    enum SudokuUtilityErrorType{
+        case creationError
+    }
+    var localizedDescription : String {
+        return debugInfo
+    }
+    
+    let type : SudokuUtilityErrorType
+    let debugInfo :String
+}
+
+
+//MARK:  SudokuUtility
+
+public class SudokuUtility{
+    
+    //MARK: Public Functions
+    public func createSquare(ofSize : Int) throws -> SudokuPuzzle{
         
         let s = SudokuUtility()
         let data = s.baseMatrix(size: ofSize)
@@ -111,6 +207,9 @@ class SudokuUtility{
         try dl.solve(random: true) { (answer) -> Bool in
             answers = answer.first ?? []
             return true
+        }
+        if answers.count == 0{
+            throw SudokuUtilityError(type: .creationError, debugInfo: "createSquare was unable to create a puzzle.  An empty array was returned from DancingLinks solve")
         }
         return sudukoPuzzleFromRows(answers)
     }
@@ -123,7 +222,7 @@ class SudokuUtility{
         }
         return SudokuPuzzle(data: data, size: 9)
     }
-    
+    //MARK: Internal Utility
     private func type(forIndex: Int, size: Int) -> ConstraintType{
         let col = forIndex % size
         switch col {
@@ -157,6 +256,7 @@ class SudokuUtility{
         return (row, col, value)
     }
     
+    //MARK: Base Matrix
     //TODO: Make this a lazy var to cahe and run only once
     internal func baseMatrix(size: Int) -> [Int]{
         //make size^3 rows by size^2 * constaint types columns
