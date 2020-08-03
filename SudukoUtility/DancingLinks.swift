@@ -100,6 +100,7 @@ final class DancingLinks{
     private var stopBlock : (([[Int]])->Bool)?
     var maxRecursionDepth = 500
     private var shouldStop = false
+    private var random = false
     //MARK: Init
     required init(from : [Int], size : Int) {
         self.size = size
@@ -121,7 +122,7 @@ final class DancingLinks{
     
     //MARK: Debug print
     //TODO: use apple protocol
-    public func debugPrintMatrix(headPtr : DLXNode){
+    internal func debugPrintMatrix(headPtr : DLXNode){
         var colCnt = 0
         var next : DLXNode? = headPtr
         repeat{
@@ -149,7 +150,7 @@ final class DancingLinks{
         }while headPtr != next && next != nil
         
     }
-    public func debugPrintHeaderConnections()->String{
+    internal func debugPrintHeaderConnections()->String{
         let max = 20
         var count = 0
         var loopBegin = -1
@@ -186,7 +187,7 @@ final class DancingLinks{
     
     //MARK: Make Matrix
     
-    public func makeMatrix(from : [Int], size : Int) -> DLXNode{
+    internal func makeMatrix(from : [Int], size : Int) -> DLXNode{
         var headerPtr : DLXNode? = nil
         let colPointer = DLXNode()
         var first : DLXNode = DLXNode()
@@ -287,6 +288,9 @@ final class DancingLinks{
         
         col.left.right = col.right
         col.right.left = col.left
+        if(col.columnCount == 0){
+            return
+        }
         var next : DLXNode = col.bottom
         while(next != col){
             var right = next.right
@@ -319,10 +323,24 @@ final class DancingLinks{
     }
     
     //MARK: Solve
+    internal func setPartialSolution(columns : [Int]){
+        var node : DLXNode = root.right
+        while(node != root){
+            if(columns.contains(node.coordinate.column)){
+                cover(node)
+                for row in rows(column: node, randomized: false){
+               
+                    //internalSolutionSet.append(row)
+                }
+            }
+            node = node.right
+        }
+    }
     
-    public func solve(random: Bool, stopBlock : @escaping ([[Int]]) -> Bool ) throws {
+    internal func solve(random: Bool, stopBlock : @escaping ([[Int]]) -> Bool ) throws {
         self.shouldStop = false
         self.stopBlock = stopBlock
+        self.random = random
         try solve(0)
     }
     
@@ -351,12 +369,14 @@ final class DancingLinks{
             }
             
         }
-        let column = self.getMinimumColumn()
         
+        let column = self.getMinimumColumn()
+        if(column.columnCount == 0){
+            return
+        }
         self.cover(column)
         self.lastColumn = column
-        
-        for row in rows(column: column, randomized: true){
+        for row in rows(column: column, randomized: self.random){
             if(shouldStop){
                 break
             }

@@ -9,18 +9,18 @@
 import Foundation
 
 struct Coordinate : Equatable{
-    var row : UInt8
-    var column : UInt8
-    var value : UInt8?
+    var row : Int
+    var column : Int
+    var value : Int?
     
-    var index : UInt8 {
+    var index : Int {
         return row * 9 + column
     }
-    init(idx : UInt8, size: UInt8) {
+    init(idx : Int, size: Int) {
         self.row = idx % size
         self.column = idx / size
     }
-    init(row : UInt8, column: UInt8) {
+    init(row : Int, column: Int) {
         self.row = row
         self.column = column
     }
@@ -30,10 +30,10 @@ struct Coordinate : Equatable{
 }
 struct RawSudukoData{
     
-    var size : UInt8 = 9
-    let data : [UInt8]
+    var size : Int = 9
+    let data : [Int]
     
-    func coordinate(forIndex: UInt8) -> Coordinate{
+    func coordinate(forIndex: Int) -> Coordinate{
         
         return Coordinate(row: forIndex % size, column: forIndex / size)
     }
@@ -71,15 +71,15 @@ internal class ColumnNode : Equatable{
     var left : ColumnNode?
     var right : ColumnNode?
     
-    init(type: ColumnNodeType, row : UInt8, column : UInt8) {
+    init(type: ColumnNodeType, row : Int, column : Int) {
         self.type = type
         self.covered = false
         self.row = row
         self.column = column
     }
     
-    var row : UInt8
-    var column : UInt8
+    var row : Int
+    var column : Int
     
     var items : [Node]? {
         if let topNode = top{
@@ -190,7 +190,7 @@ internal class Node : Equatable, CustomStringConvertible, Hashable{
     }
     
 }
- internal func baseMatrix(size: UInt8) -> ColumnNode{
+ internal func baseMatrix(size: Int) -> ColumnNode{
         var entry : ColumnNode?
         var latestNode : ColumnNode?
         var rowPointers: [[Node]] = []

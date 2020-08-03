@@ -27,7 +27,7 @@ class SudokuTests: XCTestCase {
         let data = s.baseMatrix(size: 9)
         XCTAssert(data.count == 236196)
     }
-    func testThatMakeMatrixHasRightNuumberOfOnes(){
+    func testThatMakeMatrixHasRightNumberOfOnes(){
         let s = SudokuUtility()
         let data = s.baseMatrix(size: 9)
         let count = data.filter{$0 == 1}.count
@@ -45,7 +45,17 @@ class SudokuTests: XCTestCase {
     }
     func testIsCorrectReturnsTrueOnValidPuzzle(){
         
-        let data = [ 6 , 0 , 2 , 7 , 3 , 5 , 4 , 1 , 8 , 8 , 7 , 5 , 4 , 0 , 1 , 6 , 3 , 2 , 4 , 1 , 3 , 2 , 8 , 6 , 5 , 0 , 7 , 0 , 6 , 1 , 5 , 4 , 8 , 2 , 7 , 3 , 5 , 3 , 7 , 6 , 1 , 2 , 0 , 8 , 4 , 2 , 4 , 8 , 3 , 7 , 0 , 1 , 6 , 5 , 1 , 5 , 0 , 8 , 2 , 3 , 7 , 4 , 6 , 3 , 2 , 4 , 1 , 6 , 7 , 8 , 5 , 0 , 7 , 8 , 6 , 0 , 5 , 4 , 3 , 2 , 1 ]
+        let data =
+        [ 6 , 0 , 2 , 7 , 3 , 5 , 4 , 1 , 8 ,
+          8 , 7 , 5 , 4 , 0 , 1 , 6 , 3 , 2 ,
+          4 , 1 , 3 , 2 , 8 , 6 , 5 , 0 , 7 ,
+          0 , 6 , 1 , 5 , 4 , 8 , 2 , 7 , 3 ,
+          5 , 3 , 7 , 6 , 1 , 2 , 0 , 8 , 4 ,
+          2 , 4 , 8 , 3 , 7 , 0 , 1 , 6 , 5 ,
+          1 , 5 , 0 , 8 , 2 , 3 , 7 , 4 , 6 ,
+          3 , 2 , 4 , 1 , 6 , 7 , 8 , 5 , 0 ,
+          7 , 8 , 6 , 0 , 5 , 4 , 3 , 2 , 1
+        ]
         let puzzle = SudokuPuzzle(data: data, size: 9)
         XCTAssert(puzzle.isSolved())
     }
@@ -59,7 +69,28 @@ class SudokuTests: XCTestCase {
         let puzzle2 = SudokuPuzzle(data: swapped, size: 9)
         XCTAssert(!puzzle2.isSolved())
     }
-    
+    func testSolvePartial(){
+        let data = [
+          8 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 4 ,
+          0 , 5 , 0 , 6 , 0 , 0 , 0 , 0 , 0 ,
+          0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 ,
+          0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 ,
+          0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 ,
+          0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 ,
+          0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 ,
+          0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 ,
+          0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0
+        ]
+        let puzzle = SudokuPuzzle(data: data, size: 9)
+        
+        do {
+            let solved = try puzzle.solvedCopy()
+            print(solved.description)
+        } catch let e {
+            XCTFail(e.localizedDescription)
+        }
+        
+    }
     
     func testPerformanceOfSolve() throws {
         self.measure {
@@ -75,7 +106,21 @@ class SudokuTests: XCTestCase {
             }
         }
     }
-    
+    func testJunk(){
+        for i in 0..<729{
+            let r = i / 81
+            let c = i % 81 / 9
+            let v = i % 9
+            let answer = matrixRowfromSuduko(row: r, col: c, value: v, group: 0, size:  9)
+            print("\(i): R\(r)C\(c)V\(v)    ->    \(answer)")
+            if(i % 81 == 0  && i != 0){
+                print("=====================================================")
+            }
+        }
+    }
+    private func matrixRowfromSuduko( row : Int, col : Int, value : Int,group : Int, size : Int) -> Int{
+           return (size * size) * row + (col * size) + (col / (size * size)) % 9 + value
+       }
 }
 
 

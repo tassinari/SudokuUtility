@@ -40,8 +40,13 @@ public struct SudokuPuzzle{
 //MARK: Solving utilties
 extension SudokuPuzzle{
     
-    public func solvedCopy() throws -> [Int]{
+    public func solvedCopy() throws -> SudokuPuzzle{
         let dl = DancingLinks(withPuzzle: self)
+        let solvedColumns = filledColumns()
+        if(solvedColumns.count  > 0){
+            dl.setPartialSolution(columns: filledColumns())
+        }
+        
         do {
             try dl.solve(random: true) { (answers) -> Bool in
                    return true
@@ -49,8 +54,16 @@ extension SudokuPuzzle{
             guard let solution = dl.solutionSet.first else {
                 throw SudokuPuzzleError(type: .noSolutions, debugInfo: "No solutions found")
             }
+            var filledRows : [Int] = []
+            for (i,v) in self.data.enumerated(){
+                if(v > 0){
+                    filledRows.append(matrixRowfromSuduko(row: i / size, col: i % size, value: v, size: size ))
+                }
+            }
+            var rows = solution.map{$0.coordinate.row}
+            rows.append(contentsOf: filledRows)
             //FIXME: This is returning the rows, need to return a Puzzle
-            return solution.map{$0.coordinate.row}
+            return self.sudukoPuzzleFromRows(rows)
         } catch let e {
             throw e
         }
@@ -104,6 +117,60 @@ extension SudokuPuzzle{
         
         return allRowsGood && allColsGood && allGroupsGood
     }
+    internal func filledColumns() -> [Int]{
+        var cols : [Int] = []
+        for (i, v) in self.data.enumerated(){
+            if( v != 0){
+                let c = matrixColumnsfromIndex(i)
+                cols.append(contentsOf: c)
+            }
+        }
+        return cols
+    }
+    private func matrixColumnsfromIndex(_ index : Int) -> [Int]{
+        var colNums : [Int] = []
+        let sizeSquared = size * size
+        let row = index / size
+        let col = index % size
+        let value = data[index]
+        let group = groupFromIndex(index: index)
+        for constraint in ConstraintType.allCases{
+            switch constraint {
+            case .cellConstraint:
+                colNums.append(  indexOf(size: size, row: row, column: col))
+                break
+            case .rowConstraint:
+                colNums.append( sizeSquared + row * size + value)
+                break
+            case .columnConstraint:
+                colNums.append( 2 * sizeSquared + col * size + value)
+                break
+            case .groupConstaint:
+                colNums.append( 3 * sizeSquared + group * size + value)
+                break
+            }
+        }
+        return colNums
+    }
+    private func sudukoPuzzleFromRows(_ rows : [Int]) -> SudokuPuzzle{
+        var data : [Int] = [Int](repeating: 0, count: rows.count)
+        for rowNumber in rows{
+            let all = rowValues(forRow: rowNumber, size: 9)
+            let indx = indexOf(size: 9, row: all.0, column: all.1)
+            data[indx] = all.2
+        }
+        return SudokuPuzzle(data: data, size: 9)
+    }
+    private func matrixRowfromSuduko( row : Int, col : Int, value : Int, size : Int) -> Int{
+        return (size * size) * row + (col * size) + (col / (size * size)) % 9 + value
+    }
+    private func rowValues(forRow: Int, size: Int) -> (Int,Int,Int){
+           
+           let value = forRow % size
+           let row = (forRow / (size * size)) % size
+           let col = (forRow / size) % size
+           return (row, col, value)
+       }
 }
 
 //MARK: SudokuPuzzle Description
@@ -145,7 +212,7 @@ internal func groupFromIndex(index : Int)-> Int{
     let column = nChunkIndex % 3;
     return column + row * 3;
 }
-internal func index(size: Int, row: Int, column : Int) -> Int{
+internal func indexOf(size: Int, row: Int, column : Int) -> Int{
     return row * size + column
 }
 
@@ -170,8 +237,8 @@ internal enum ConstraintType : CaseIterable{
 internal extension DancingLinks {
     
     convenience init(withPuzzle: SudokuPuzzle){
-        
-        self.init(from: withPuzzle.data, size: withPuzzle.size)
+        let matrix = SudokuUtility().baseMatrix(size: withPuzzle.size)
+        self.init(from:matrix, size:  9 * 9 * 4)
         
     }
     
@@ -217,12 +284,13 @@ public class SudokuUtility{
         var data : [Int] = [Int](repeating: 0, count: rows.count)
         for rowNumber in rows{
             let all = rowValues(forRow: rowNumber, size: 9)
-            let indx = index(size: 9, row: all.0, column: all.1)
+            let indx = indexOf(size: 9, row: all.0, column: all.1)
             data[indx] = all.2
         }
         return SudokuPuzzle(data: data, size: 9)
     }
     //MARK: Internal Utility
+    //FIXME: tied to a 9x9 puuzzle
     private func type(forIndex: Int, size: Int) -> ConstraintType{
         let col = forIndex % size
         switch col {
@@ -240,7 +308,7 @@ public class SudokuUtility{
         
     }
     
-    /// Returns the values of Row, Column and Value for a particular index (Index, not row)
+    /// Returns the values of Row, Column and Value for a particular index (Index, not row) of the base matrix
     ///  see: https://www.stolaf.edu/people/hansonr/sudoku/exactcovermatrix.htm
     ///  This will make the rows of the above example
     /// - Parameters:
@@ -292,7 +360,7 @@ public class SudokuUtility{
                 break
             case .groupConstaint:
                 //fisrtConstraint is group, second is value
-                let indx = index(size: size, row: rowVals.0, column: rowVals.1)
+                let indx = indexOf(size: size, row: rowVals.0, column: rowVals.1)
                 data[i] = (secondColumnConstraint == rowVals.2 && firstColumnConstraint == groupFromIndex(index: indx)) ? 1 : 0
                 break
             }
@@ -300,4 +368,38 @@ public class SudokuUtility{
         }
         return data
     }
+//    internal func makeMatrix(fromPuzzle : SudokuPuzzle) throws -> [Int] {
+//        //FIXME: base matrix muust be lazy
+//        var fullMatrix = self.baseMatrix(size: fromPuzzle.size)
+//        let colSize = fromPuzzle.size * fromPuzzle.size * 4
+//        for (i,v) in fromPuzzle.data.enumerated(){
+//            if(v == 0){
+//                continue
+//            }
+//            let cols = self.matrixColumnsfromSuduko(row: i / fromPuzzle.size, col:  i % fromPuzzle.size, value: v,group : groupFromIndex(index: i), size: fromPuzzle.size )
+//            let row = matrixRowfromSuduko(row: i / fromPuzzle.size, col: i % fromPuzzle.size, value: v, group: groupFromIndex(index: i), size: fromPuzzle.size)
+//            for col in cols{
+//                for i in everyIndexInAColumn(fromIndex: col, columnSize: colSize , length: fullMatrix.count){
+//                    if fullMatrix[i] == 1 && i / colSize != row {
+//                        fullMatrix[i] = 0
+//                    }
+//                }
+//            }
+//        }
+//        return fullMatrix
+//    }
+    private func matrixRowfromSuduko( row : Int, col : Int, value : Int,group : Int, size : Int) -> Int{
+        return size * row + (col * size) % size + value
+    }
+    
+//    private func everyIndexInAColumn(fromIndex: Int, columnSize : Int, length : Int) -> [Int]{
+//        var cols : [Int] = []
+//        var col = fromIndex % columnSize
+//        while col < length{
+//            cols.append(col)
+//            col += columnSize
+//        }
+//
+//        return cols
+//    }
 }
