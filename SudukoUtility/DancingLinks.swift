@@ -328,10 +328,6 @@ final class DancingLinks{
         while(node != root){
             if(columns.contains(node.coordinate.column)){
                 cover(node)
-                for row in rows(column: node, randomized: false){
-               
-                    //internalSolutionSet.append(row)
-                }
             }
             node = node.right
         }

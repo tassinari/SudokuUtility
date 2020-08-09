@@ -23,21 +23,19 @@ class SudokuTests: XCTestCase {
     }
     
     func testThatMakeMatrixHasRightDataSize(){
-        let s = SudokuUtility()
-        let data = s.baseMatrix(size: 9)
+        
+        let data = SudokuPuzzle(withDifficulty: .easy).baseMatrix(size: 9)
         XCTAssert(data.count == 236196)
     }
     func testThatMakeMatrixHasRightNumberOfOnes(){
-        let s = SudokuUtility()
-        let data = s.baseMatrix(size: 9)
+        let data = SudokuPuzzle(withDifficulty: .easy).baseMatrix(size: 9)
         let count = data.filter{$0 == 1}.count
        XCTAssert(count == 2916)
     }
     func testSquarePuzzleIsValid(){
-        let s = SudokuUtility()
+       
         do {
-            let square = try s.createSquare(ofSize: 9)
-            print(square)
+            let square = try SudokuPuzzle(withDifficulty: .easy).createSquare(ofSize: 9)
             XCTAssert(square.isSolved())
         } catch let e {
             XCTFail(e.localizedDescription)
@@ -46,21 +44,21 @@ class SudokuTests: XCTestCase {
     func testIsCorrectReturnsTrueOnValidPuzzle(){
         
         let data =
-        [ 6 , 0 , 2 , 7 , 3 , 5 , 4 , 1 , 8 ,
-          8 , 7 , 5 , 4 , 0 , 1 , 6 , 3 , 2 ,
-          4 , 1 , 3 , 2 , 8 , 6 , 5 , 0 , 7 ,
-          0 , 6 , 1 , 5 , 4 , 8 , 2 , 7 , 3 ,
-          5 , 3 , 7 , 6 , 1 , 2 , 0 , 8 , 4 ,
-          2 , 4 , 8 , 3 , 7 , 0 , 1 , 6 , 5 ,
-          1 , 5 , 0 , 8 , 2 , 3 , 7 , 4 , 6 ,
-          3 , 2 , 4 , 1 , 6 , 7 , 8 , 5 , 0 ,
-          7 , 8 , 6 , 0 , 5 , 4 , 3 , 2 , 1
+        [ 6 , 9 , 2 , 7 , 3 , 5 , 4 , 1 , 8 ,
+          8 , 7 , 5 , 4 , 9 , 1 , 6 , 3 , 2 ,
+          4 , 1 , 3 , 2 , 8 , 6 , 5 , 9 , 7 ,
+          9 , 6 , 1 , 5 , 4 , 8 , 2 , 7 , 3 ,
+          5 , 3 , 7 , 6 , 1 , 2 , 9 , 8 , 4 ,
+          2 , 4 , 8 , 3 , 7 , 9 , 1 , 6 , 5 ,
+          1 , 5 , 9 , 8 , 2 , 3 , 7 , 4 , 6 ,
+          3 , 2 , 4 , 1 , 6 , 7 , 8 , 5 , 9 ,
+          7 , 8 , 6 , 9 , 5 , 4 , 3 , 2 , 1
         ]
         let puzzle = SudokuPuzzle(data: data, size: 9)
         XCTAssert(puzzle.isSolved())
     }
     func testIsCorrectReturnsFalseOnInValidPuzzle(){
-        
+        //FIXME:  this data is off by 1 now
         let data = [ 7 , 0 , 2 , 7 , 3 , 5 , 4 , 1 , 8 , 8 , 7 , 5 , 4 , 0 , 1 , 6 , 3 , 2 , 4 , 1 , 3 , 2 , 8 , 6 , 5 , 0 , 7 , 0 , 6 , 1 , 5 , 4 , 8 , 2 , 7 , 3 , 5 , 3 , 7 , 6 , 1 , 2 , 0 , 8 , 4 , 2 , 4 , 8 , 3 , 7 , 0 , 1 , 6 , 5 , 1 , 5 , 0 , 8 , 2 , 3 , 7 , 4 , 6 , 3 , 2 , 4 , 1 , 6 , 7 , 8 , 5 , 0 , 7 , 8 , 6 , 0 , 5 , 4 , 3 , 2 , 1 ]
         let puzzle = SudokuPuzzle(data: data, size: 9)
         XCTAssert(!puzzle.isSolved())
@@ -68,24 +66,39 @@ class SudokuTests: XCTestCase {
         let swapped = [ 1 , 0 , 2 , 7 , 3 , 5 , 4 , 6 , 8 , 8 , 7 , 5 , 4 , 0 , 1 , 6 , 3 , 2 , 4 , 1 , 3 , 2 , 8 , 6 , 5 , 0 , 7 , 0 , 6 , 1 , 5 , 4 , 8 , 2 , 7 , 3 , 5 , 3 , 7 , 6 , 1 , 2 , 0 , 8 , 4 , 2 , 4 , 8 , 3 , 7 , 0 , 1 , 6 , 5 , 1 , 5 , 0 , 8 , 2 , 3 , 7 , 4 , 6 , 3 , 2 , 4 , 1 , 6 , 7 , 8 , 5 , 0 , 7 , 8 , 6 , 0 , 5 , 4 , 3 , 2 , 1 ]
         let puzzle2 = SudokuPuzzle(data: swapped, size: 9)
         XCTAssert(!puzzle2.isSolved())
+        
+        let data2 =
+        [ 0 , 9 , 2 , 7 , 3 , 5 , 4 , 1 , 8 ,
+          8 , 7 , 5 , 4 , 9 , 1 , 6 , 3 , 2 ,
+          4 , 1 , 3 , 2 , 8 , 6 , 5 , 9 , 7 ,
+          9 , 6 , 1 , 5 , 4 , 8 , 2 , 7 , 3 ,
+          5 , 3 , 7 , 6 , 1 , 2 , 9 , 8 , 4 ,
+          2 , 4 , 8 , 3 , 7 , 9 , 1 , 6 , 5 ,
+          1 , 5 , 9 , 8 , 2 , 3 , 7 , 4 , 6 ,
+          3 , 2 , 4 , 1 , 6 , 7 , 8 , 5 , 9 ,
+          7 , 8 , 6 , 9 , 5 , 4 , 3 , 2 , 1
+        ]
+        let puzzle3 = SudokuPuzzle(data: data2, size: 9)
+        XCTAssert(!puzzle3.isSolved())
     }
     func testSolvePartial(){
         let data = [
-          8 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 4 ,
-          0 , 5 , 0 , 6 , 0 , 0 , 0 , 0 , 0 ,
-          0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 ,
-          0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 ,
-          0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 ,
-          0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 ,
-          0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 ,
-          0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 ,
-          0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0
+          0 , 0 , 9 , 0 , 5 , 7 , 0 , 0 , 0 ,
+          8 , 2 , 0 , 0 , 0 , 3 , 0 , 0 , 0 ,
+          0 , 0 , 3 , 8 , 0 , 0 , 9 , 0 , 0 ,
+          0 , 6 , 0 , 0 , 9 , 0 , 3 , 0 , 0 ,
+          0 , 9 , 8 , 5 , 0 , 6 , 4 , 7 , 0 ,
+          0 , 0 , 1 , 0 , 7 , 0 , 0 , 9 , 0 ,
+          0 , 0 , 5 , 0 , 0 , 9 , 1 , 0 , 0 ,
+          0 , 0 , 0 , 7 , 0 , 0 , 0 , 4 , 9 ,
+          0 , 0 , 0 , 4 , 2 , 0 , 8 , 0 , 0
         ]
-        let puzzle = SudokuPuzzle(data: data, size: 9)
+        let transformed = data.map { $0 - 1}
+        let puzzle = SudokuPuzzle(data: transformed, size: 9)
         
         do {
             let solved = try puzzle.solvedCopy()
-            print(solved.description)
+            XCTAssert(solved.isSolved())
         } catch let e {
             XCTFail(e.localizedDescription)
         }
@@ -94,8 +107,8 @@ class SudokuTests: XCTestCase {
     
     func testPerformanceOfSolve() throws {
         self.measure {
-            let s = SudokuUtility()
-            let data = s.baseMatrix(size: 9)
+            
+            let data = SudokuPuzzle(withDifficulty: .easy).baseMatrix(size: 9)
             let dl = DancingLinks(from: data, size: 9 * 9 * 4)
             do {
                 try dl.solve(random: true) { (answer) -> Bool in
@@ -106,21 +119,7 @@ class SudokuTests: XCTestCase {
             }
         }
     }
-    func testJunk(){
-        for i in 0..<729{
-            let r = i / 81
-            let c = i % 81 / 9
-            let v = i % 9
-            let answer = matrixRowfromSuduko(row: r, col: c, value: v, group: 0, size:  9)
-            print("\(i): R\(r)C\(c)V\(v)    ->    \(answer)")
-            if(i % 81 == 0  && i != 0){
-                print("=====================================================")
-            }
-        }
-    }
-    private func matrixRowfromSuduko( row : Int, col : Int, value : Int,group : Int, size : Int) -> Int{
-           return (size * size) * row + (col * size) + (col / (size * size)) % 9 + value
-       }
+   
 }
 
 
