@@ -32,6 +32,9 @@ struct SudokuPuzzleError : Error  {
 public struct SudokuPuzzle{
     var data : [Int]
     var size : Int
+    private var _data : [Int] {
+        return data.map{$0 - 1}
+    }
     
     init(data : [Int], size : Int){
         self.data = data
@@ -61,7 +64,7 @@ extension SudokuPuzzle{
                 throw SudokuPuzzleError(type: .noSolutions, debugInfo: "No solutions found")
             }
             var filledRows : [Int] = []
-            for (i,v) in self.data.enumerated(){
+            for (i,v) in self._data.enumerated(){
                 if(v > -1){
                     filledRows.append(matrixRowfromSuduko(row: i / size, col: i % size, value: v, size: size ))
                 }
@@ -76,6 +79,12 @@ extension SudokuPuzzle{
     public func uniquelySolvable() throws -> Bool{
         
         let dl = DancingLinks(withPuzzle: self)
+        //need to check if partial and set
+        let solvedColumns = filledColumns()
+        if(solvedColumns.count  > 0){
+            dl.setPartialSolution(columns: filledColumns())
+        }
+        
         do {
             try dl.solve(random: true) { (answers) -> Bool in
                 return answers.count > 1
@@ -94,7 +103,7 @@ extension SudokuPuzzle{
         
         return .easy
     }
-    func isSolved() -> Bool{
+    public func isSolved() -> Bool{
         
         //check every item is a number
         if self.data.contains(0){
@@ -123,7 +132,7 @@ extension SudokuPuzzle{
     }
     internal func filledColumns() -> [Int]{
         var cols : [Int] = []
-        for (i, v) in self.data.enumerated(){
+        for (i, v) in self._data.enumerated(){
             if( v != -1){
                 let c = matrixColumnsfromIndex(i)
                 cols.append(contentsOf: c)
@@ -136,7 +145,7 @@ extension SudokuPuzzle{
         let sizeSquared = size * size
         let row = index / size
         let col = index % size
-        let value = data[index]
+        let value = _data[index]
         let group = groupFromIndex(index: index)
         for constraint in ConstraintType.allCases{
             switch constraint {
@@ -157,7 +166,7 @@ extension SudokuPuzzle{
         return colNums
     }
     private func sudukoPuzzleFromRows(_ rows : [Int]) -> SudokuPuzzle{
-        var data : [Int] = [Int](repeating: 0, count: rows.count)
+        var data : [Int] = [Int](repeating: 0, count: 81)
         for rowNumber in rows{
             let all = rowValues(forRow: rowNumber, size: 9)
             let indx = indexOf(size: 9, row: all.0, column: all.1)
@@ -206,23 +215,52 @@ extension SudokuPuzzle : CustomStringConvertible{
     
     
 }
+//MARK: Creating utilties
+extension SudokuPuzzle{
+    //TODO: this shouldnt throw, if a puzzle cant be created we have deeper problems
+    public func createSquare(ofSize : Int) throws -> SudokuPuzzle{
+           //
+           let data = baseMatrix(size: ofSize)
+           let dl = DancingLinks(from: data, size: 9 * 9 * 4)
+           var answers : [Int] = []
+           try dl.solve(random: true) { (answer) -> Bool in
+               answers = answer.first ?? []
+               return true
+           }
+           if answers.count == 0{
+               throw SudokuPuzzleError(type: .noSolutions, debugInfo: "createSquare was unable to create a puzzle.  An empty array was returned from DancingLinks solve")
+           }
+           return sudukoPuzzleFromRows(answers)
+       }
+    internal func creatPuzzle(ofDifficulty : DificultyRating ) throws -> SudokuPuzzle{
+        
+        return try createSquare(ofSize: 9).removeTilUnique()
+    }
+    internal func removeTilUnique() -> SudokuPuzzle{
+        let randoms = [Int](0..<80).shuffled()
+        var i = 0
+        var lastvalue = 0
+        var d = self._data
+        //FIXME: bounds check
+        while(true){
+            lastvalue = d[randoms[i]]
+            d[randoms[i]] = -1
+            let puzzle = SudokuPuzzle(data: d.map{$0 + 1}, size: 9)
+            if let b = try? puzzle.uniquelySolvable(){
+                if(!b){
+                    d[randoms[i]] = lastvalue
+                    return  SudokuPuzzle(data: d.map{$0 + 1}, size: 9)
+                }
+            }
+            i += 1
+        }
+    }
+   
+    
+}
 
 extension SudokuPuzzle {
     
-    public func createSquare(ofSize : Int) throws -> SudokuPuzzle{
-        //
-        let data = baseMatrix(size: ofSize)
-        let dl = DancingLinks(from: data, size: 9 * 9 * 4)
-        var answers : [Int] = []
-        try dl.solve(random: true) { (answer) -> Bool in
-            answers = answer.first ?? []
-            return true
-        }
-        if answers.count == 0{
-            throw SudokuPuzzleError(type: .noSolutions, debugInfo: "createSquare was unable to create a puzzle.  An empty array was returned from DancingLinks solve")
-        }
-        return sudukoPuzzleFromRows(answers)
-    }
     
     //TODO: Make this a lazy var to cahe and run only once
        internal func baseMatrix(size: Int) -> [Int]{

@@ -13,7 +13,6 @@
 		48A5A70D248D0BF600011FFC /* DancingLinksTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48A5A70C248D0BF600011FFC /* DancingLinksTests.swift */; };
 		48A5A70F248D0BF600011FFC /* SudukoUtility.h in Headers */ = {isa = PBXBuildFile; fileRef = 48A5A701248D0BF600011FFC /* SudukoUtility.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		48A5A719248D0C1100011FFC /* DancingLinks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48A5A718248D0C1100011FFC /* DancingLinks.swift */; };
-		48A5A71B248D49FB00011FFC /* Suduko_old.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48A5A71A248D49FB00011FFC /* Suduko_old.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -36,7 +35,6 @@
 		48A5A70C248D0BF600011FFC /* DancingLinksTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DancingLinksTests.swift; sourceTree = "<group>"; };
 		48A5A70E248D0BF600011FFC /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		48A5A718248D0C1100011FFC /* DancingLinks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DancingLinks.swift; sourceTree = "<group>"; };
-		48A5A71A248D49FB00011FFC /* Suduko_old.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Suduko_old.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -81,7 +79,6 @@
 			children = (
 				48A5A701248D0BF600011FFC /* SudukoUtility.h */,
 				48A5A718248D0C1100011FFC /* DancingLinks.swift */,
-				48A5A71A248D49FB00011FFC /* Suduko_old.swift */,
 				4851E9FA24C4AEFE006786DE /* Sudoku.swift */,
 				48A5A702248D0BF600011FFC /* Info.plist */,
 			);
@@ -208,7 +205,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				48A5A71B248D49FB00011FFC /* Suduko_old.swift in Sources */,
 				48A5A719248D0C1100011FFC /* DancingLinks.swift in Sources */,
 				4851E9FB24C4AEFE006786DE /* Sudoku.swift in Sources */,
 			);

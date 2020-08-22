@@ -184,6 +184,15 @@ final class DancingLinks{
         return str
         
     }
+    private func columnCount() -> Int{
+        var node : DLXNode = root.right
+        var c = 0
+        while(node != root){
+            node = node.right
+            c += 1
+        }
+        return c
+    }
     
     //MARK: Make Matrix
     
@@ -324,12 +333,14 @@ final class DancingLinks{
     
     //MARK: Solve
     internal func setPartialSolution(columns : [Int]){
-        var node : DLXNode = root.right
-        while(node != root){
-            if(columns.contains(node.coordinate.column)){
-                cover(node)
+        for i in columns{
+            var node : DLXNode = root.right
+            while(node != root){
+                if(i == node.coordinate.column){
+                    cover(node)
+                }
+                node = node.right
             }
-            node = node.right
         }
     }
     
@@ -358,11 +369,11 @@ final class DancingLinks{
                 return
             }
             
-            if let last = self.lastColumn{
-                uncover(last)
-                self.lastColumn = nil
-                return
-            }
+//            if let last = self.lastColumn{
+//                uncover(last)
+//                self.lastColumn = nil
+//                return
+//            }
             
         }
         
