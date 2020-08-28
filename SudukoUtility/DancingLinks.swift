@@ -94,17 +94,21 @@ final class DancingLinks{
     
     internal var internalSolutionSet : [DLXNode] = []
     internal var root : DLXNode = DLXNode()
-    internal var size : Int
     private var lastColumn : DLXNode?
     var solutionSet : [[DLXNode]] = []
     private var stopBlock : (([[Int]])->Bool)?
     var maxRecursionDepth = 500
     private var shouldStop = false
     private var random = false
+    private var partialSolutionCoveredColumns : [DLXNode] = []
+    
     //MARK: Init
-    required init(from : [Int], size : Int) {
-        self.size = size
-        self.root = makeMatrix(from: from , size: size)
+    convenience init(from : [Int], size : Int) {
+
+        self.init(from: DancingLinks.makeMatrix(from: from , size: size))
+    }
+    required init(from : DLXNode) {
+        self.root = from
     }
     
     //MARK: Min Column
@@ -196,7 +200,7 @@ final class DancingLinks{
     
     //MARK: Make Matrix
     
-    internal func makeMatrix(from : [Int], size : Int) -> DLXNode{
+    private static func makeMatrix(from : [Int], size : Int) -> DLXNode{
         var headerPtr : DLXNode? = nil
         let colPointer = DLXNode()
         var first : DLXNode = DLXNode()
@@ -338,16 +342,23 @@ final class DancingLinks{
             while(node != root){
                 if(i == node.coordinate.column){
                     cover(node)
+                    self.partialSolutionCoveredColumns.append(node)
                 }
                 node = node.right
             }
         }
+    }
+    internal func clearPartialSolution(columns : [Int]){
+        let _ = self.partialSolutionCoveredColumns.reversed().map{uncover($0)}
+        self.partialSolutionCoveredColumns.removeAll()
     }
     
     internal func solve(random: Bool, stopBlock : @escaping ([[Int]]) -> Bool ) throws {
         self.shouldStop = false
         self.stopBlock = stopBlock
         self.random = random
+        self.internalSolutionSet = []
+        self.solutionSet = []
         try solve(0)
     }
     
@@ -368,13 +379,6 @@ final class DancingLinks{
                 shouldStop = true
                 return
             }
-            
-//            if let last = self.lastColumn{
-//                uncover(last)
-//                self.lastColumn = nil
-//                return
-//            }
-            
         }
         
         let column = self.getMinimumColumn()

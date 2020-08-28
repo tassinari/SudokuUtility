@@ -35,13 +35,8 @@ public struct SudokuPuzzle{
     private var _data : [Int] {
         return data.map{$0 - 1}
     }
-    
-    init(data : [Int], size : Int){
+    init(data : [Int]){
         self.data = data
-        self.size = size
-    }
-    init( withDifficulty: DificultyRating) {
-        self.data = []
         self.size = 9
     }
 }
@@ -50,17 +45,21 @@ public struct SudokuPuzzle{
 extension SudokuPuzzle{
     
     public func solvedCopy() throws -> SudokuPuzzle{
-        let dl = DancingLinks(withPuzzle: self)
+        
         let solvedColumns = filledColumns()
         if(solvedColumns.count  > 0){
-            dl.setPartialSolution(columns: filledColumns())
+            SudokuPuzzle.solver.setPartialSolution(columns: solvedColumns)
         }
         
         do {
-            try dl.solve(random: true) { (answers) -> Bool in
+            try SudokuPuzzle.solver.solve(random: false) { (answers) -> Bool in
                    return true
             }
-            guard let solution = dl.solutionSet.first else {
+            if(solvedColumns.count  > 0){
+                SudokuPuzzle.solver.clearPartialSolution(columns: solvedColumns)
+            }
+            
+            guard let solution = SudokuPuzzle.solver.solutionSet.first else {
                 throw SudokuPuzzleError(type: .noSolutions, debugInfo: "No solutions found")
             }
             var filledRows : [Int] = []
@@ -78,18 +77,21 @@ extension SudokuPuzzle{
     }
     public func uniquelySolvable() throws -> Bool{
         
-        let dl = DancingLinks(withPuzzle: self)
+       
         //need to check if partial and set
         let solvedColumns = filledColumns()
         if(solvedColumns.count  > 0){
-            dl.setPartialSolution(columns: filledColumns())
+            SudokuPuzzle.solver.setPartialSolution(columns: filledColumns())
         }
         
         do {
-            try dl.solve(random: true) { (answers) -> Bool in
+            try SudokuPuzzle.solver.solve(random: true) { (answers) -> Bool in
                 return answers.count > 1
             }
-            return dl.solutionSet.count == 1
+            if(solvedColumns.count  > 0){
+                SudokuPuzzle.solver.clearPartialSolution(columns: filledColumns())
+            }
+            return SudokuPuzzle.solver.solutionSet.count == 1
             
         } catch let e {
             throw e
@@ -168,16 +170,16 @@ extension SudokuPuzzle{
     private func sudukoPuzzleFromRows(_ rows : [Int]) -> SudokuPuzzle{
         var data : [Int] = [Int](repeating: 0, count: 81)
         for rowNumber in rows{
-            let all = rowValues(forRow: rowNumber, size: 9)
+            let all = SudokuPuzzle.rowValues(forRow: rowNumber, size: 9)
             let indx = indexOf(size: 9, row: all.0, column: all.1)
             data[indx] = all.2 + 1
         }
-        return SudokuPuzzle(data: data, size: 9)
+        return SudokuPuzzle(data: data)
     }
     private func matrixRowfromSuduko( row : Int, col : Int, value : Int, size : Int) -> Int{
         return (size * size) * row + (col * size) + (col / (size * size)) % 9 + value
     }
-    private func rowValues(forRow: Int, size: Int) -> (Int,Int,Int){
+    private static func rowValues(forRow: Int, size: Int) -> (Int,Int,Int){
            
            let value = forRow % size
            let row = (forRow / (size * size)) % size
@@ -220,10 +222,8 @@ extension SudokuPuzzle{
     //TODO: this shouldnt throw, if a puzzle cant be created we have deeper problems
     public func createSquare(ofSize : Int) throws -> SudokuPuzzle{
            //
-           let data = baseMatrix(size: ofSize)
-           let dl = DancingLinks(from: data, size: 9 * 9 * 4)
            var answers : [Int] = []
-           try dl.solve(random: true) { (answer) -> Bool in
+        try SudokuPuzzle.solver.solve(random: true) { (answer) -> Bool in
                answers = answer.first ?? []
                return true
            }
@@ -245,11 +245,11 @@ extension SudokuPuzzle{
         while(true){
             lastvalue = d[randoms[i]]
             d[randoms[i]] = -1
-            let puzzle = SudokuPuzzle(data: d.map{$0 + 1}, size: 9)
+            let puzzle = SudokuPuzzle(data: d.map{$0 + 1})
             if let b = try? puzzle.uniquelySolvable(){
                 if(!b){
                     d[randoms[i]] = lastvalue
-                    return  SudokuPuzzle(data: d.map{$0 + 1}, size: 9)
+                    return  SudokuPuzzle(data: d.map{$0 + 1})
                 }
             }
             i += 1
@@ -260,54 +260,56 @@ extension SudokuPuzzle{
 }
 
 extension SudokuPuzzle {
-    
-    
-    //TODO: Make this a lazy var to cahe and run only once
-       internal func baseMatrix(size: Int) -> [Int]{
-           //make size^3 rows by size^2 * constaint types columns
-           let rowSize = size * size * size
-           let colSize = size * size * ConstraintType.allCases.count
-           let dataSize = rowSize * colSize
-           var data : [Int] = [Int](repeating: 0, count: dataSize)
-           for i in 0 ..< dataSize{
-               let row = i / colSize
-               //let col = i % colSize
-               
-               //the row values of the matrix
-               let rowVals = rowValues(forRow: row, size: size)
-               //print("(\(row),\(col))")
-               //the col values of the matrix
-               let firstColumnConstraint = (i / size) % size
-               let secondColumnConstraint = i % size
-               
-               switch type(forIndex: i, size: colSize) {
-               case .cellConstraint:
-                   //fisrtConstraint is row, second is column
-                   data[i] = (secondColumnConstraint == rowVals.1 && firstColumnConstraint == rowVals.0) ? 1 : 0
-                   // print("\(rowConstraint), \(colConstraint)")
-                   break
-               case .rowConstraint:
-                   //fisrtConstraint is row, second is value
-                   data[i] = (secondColumnConstraint == rowVals.2 && firstColumnConstraint == rowVals.0) ? 1 : 0
-                   // print("\(rowConstraint), \(colConstraint)")
-                   break
-               case .columnConstraint:
-                   //fisrtConstraint is col, second is value
-                   data[i] = (secondColumnConstraint == rowVals.2 && firstColumnConstraint == rowVals.1) ? 1 : 0
-                   break
-               case .groupConstaint:
-                   //fisrtConstraint is group, second is value
-                   let indx = indexOf(size: size, row: rowVals.0, column: rowVals.1)
-                   data[i] = (secondColumnConstraint == rowVals.2 && firstColumnConstraint == groupFromIndex(index: indx)) ? 1 : 0
-                   break
-               }
-               //print("\(i)) R\(rowR)C\(colC)V\(rowValue)")
-           }
-           return data
-       }
+    internal static var solver : DancingLinks = {
+        return DancingLinks(from: baseMatrix, size: 9 * 9 * 4)
+    }()
+    internal static var baseMatrix : [Int] = {
+        
+        //make size^3 rows by size^2 * constaint types columns
+                  let rowSize = 9 * 9 * 9
+                  let colSize = 9 * 9 * ConstraintType.allCases.count
+                  let dataSize = rowSize * colSize
+                  var data : [Int] = [Int](repeating: 0, count: dataSize)
+                  for i in 0 ..< dataSize{
+                      let row = i / colSize
+                      //let col = i % colSize
+                      
+                      //the row values of the matrix
+                      let rowVals = rowValues(forRow: row, size: 9)
+                      //print("(\(row),\(col))")
+                      //the col values of the matrix
+                      let firstColumnConstraint = (i / 9) % 9
+                      let secondColumnConstraint = i % 9
+                      
+                      switch type(forIndex: i, size: colSize) {
+                      case .cellConstraint:
+                          //fisrtConstraint is row, second is column
+                          data[i] = (secondColumnConstraint == rowVals.1 && firstColumnConstraint == rowVals.0) ? 1 : 0
+                          // print("\(rowConstraint), \(colConstraint)")
+                          break
+                      case .rowConstraint:
+                          //fisrtConstraint is row, second is value
+                          data[i] = (secondColumnConstraint == rowVals.2 && firstColumnConstraint == rowVals.0) ? 1 : 0
+                          // print("\(rowConstraint), \(colConstraint)")
+                          break
+                      case .columnConstraint:
+                          //fisrtConstraint is col, second is value
+                          data[i] = (secondColumnConstraint == rowVals.2 && firstColumnConstraint == rowVals.1) ? 1 : 0
+                          break
+                      case .groupConstaint:
+                          //fisrtConstraint is group, second is value
+                          let indx = indexOf(size: 9, row: rowVals.0, column: rowVals.1)
+                          data[i] = (secondColumnConstraint == rowVals.2 && firstColumnConstraint == groupFromIndex(index: indx)) ? 1 : 0
+                          break
+                      }
+                      //print("\(i)) R\(rowR)C\(colC)V\(rowValue)")
+                  }
+                  return data
+        
+    }()
         //MARK: Internal Utility
         //FIXME: tied to a 9x9 puuzzle
-        private func type(forIndex: Int, size: Int) -> ConstraintType{
+        private static func type(forIndex: Int, size: Int) -> ConstraintType{
             let col = forIndex % size
             switch col {
             case 0...80:
@@ -345,14 +347,4 @@ internal enum ConstraintType : CaseIterable{
 
 }
 
-//MARK: Dancing Links Extension
 
-internal extension DancingLinks {
-    
-    convenience init(withPuzzle: SudokuPuzzle){
-        let matrix = withPuzzle.baseMatrix(size: withPuzzle.size)
-        self.init(from:matrix, size:  9 * 9 * 4)
-        
-    }
-    
-}
