@@ -8,8 +8,9 @@
 
 import Foundation
 public enum DificultyRating{
-    case easy,medium, hard, impossible
+    case easy,medium, hard, extraHard
 }
+
 struct SudokuPuzzleError : Error  {
     
     enum SudokuPuzzleErrorType{
@@ -30,14 +31,20 @@ struct SudokuPuzzleError : Error  {
    
 
 public struct SudokuPuzzle{
-    var data : [Int]
+    public var data : [Int]
     var size : Int
     private var _data : [Int] {
         return data.map{$0 - 1}
     }
-    init(data : [Int]){
+    internal init(data : [Int]){
         self.data = data
         self.size = 9
+    }
+    private init(){
+        
+        self.data = []
+        self.size = 9
+        
     }
 }
 
@@ -70,40 +77,42 @@ extension SudokuPuzzle{
             }
             var rows = solution.map{$0.coordinate.row}
             rows.append(contentsOf: filledRows)
-            return self.sudukoPuzzleFromRows(rows)
+            return SudokuPuzzle.sudukoPuzzleFromRows(rows)
+        } catch let e {
+            throw e
+        }
+    }
+    internal func _uniquelySolvable() throws -> (Bool,[[Int]]){
+        //need to check if partial and set
+        let solvedColumns = filledColumns()
+        if(solvedColumns.count  > 0){
+            SudokuPuzzle.solver.setPartialSolution(columns: filledColumns())
+        }
+        var myAnswers : [[Int]] = []
+        do {
+            try SudokuPuzzle.solver.solve(random: true) { (answers) -> Bool in
+                myAnswers.append(answers.last!)
+                return answers.count > 1
+            }
+            if(solvedColumns.count  > 0){
+                SudokuPuzzle.solver.clearPartialSolution(columns: filledColumns())
+            }
+            return (SudokuPuzzle.solver.solutionSet.count == 1, myAnswers)
+            
         } catch let e {
             throw e
         }
     }
     public func uniquelySolvable() throws -> Bool{
         
-       
-        //need to check if partial and set
-        let solvedColumns = filledColumns()
-        if(solvedColumns.count  > 0){
-            SudokuPuzzle.solver.setPartialSolution(columns: filledColumns())
-        }
-        
-        do {
-            try SudokuPuzzle.solver.solve(random: true) { (answers) -> Bool in
-                return answers.count > 1
-            }
-            if(solvedColumns.count  > 0){
-                SudokuPuzzle.solver.clearPartialSolution(columns: filledColumns())
-            }
-            return SudokuPuzzle.solver.solutionSet.count == 1
-            
-        } catch let e {
-            throw e
-        }
+        return try _uniquelySolvable().0
     }
     public func errors() -> [(Int,Int)]{
         
         return []
     }
     public func rate() throws -> DificultyRating{
-        
-        return .easy
+        return .medium
     }
     public func isSolved() -> Bool{
         
@@ -167,7 +176,7 @@ extension SudokuPuzzle{
         }
         return colNums
     }
-    private func sudukoPuzzleFromRows(_ rows : [Int]) -> SudokuPuzzle{
+    private static func sudukoPuzzleFromRows(_ rows : [Int]) -> SudokuPuzzle{
         var data : [Int] = [Int](repeating: 0, count: 81)
         for rowNumber in rows{
             let all = SudokuPuzzle.rowValues(forRow: rowNumber, size: 9)
@@ -220,7 +229,7 @@ extension SudokuPuzzle : CustomStringConvertible{
 //MARK: Creating utilties
 extension SudokuPuzzle{
     //TODO: this shouldnt throw, if a puzzle cant be created we have deeper problems
-    public func createSquare(ofSize : Int) throws -> SudokuPuzzle{
+    public static func createSquare(ofSize : Int) throws -> SudokuPuzzle{
            //
            var answers : [Int] = []
         try SudokuPuzzle.solver.solve(random: true) { (answer) -> Bool in
@@ -231,10 +240,42 @@ extension SudokuPuzzle{
                throw SudokuPuzzleError(type: .noSolutions, debugInfo: "createSquare was unable to create a puzzle.  An empty array was returned from DancingLinks solve")
            }
            return sudukoPuzzleFromRows(answers)
-       }
-    internal func creatPuzzle(ofDifficulty : DificultyRating ) throws -> SudokuPuzzle{
-        
-        return try createSquare(ofSize: 9).removeTilUnique()
+    }
+
+    public static func creatPuzzle() throws -> SudokuPuzzle{
+        return try createSquare(ofSize: 9).addTilUnique()
+
+    }
+    internal func addTilUnique() -> SudokuPuzzle{
+        let randoms = [Int](0..<80).shuffled()
+        var i = 0
+        let d = self._data
+        var p = [Int](repeating: -1, count: 81 )
+        for _ in 0..<18{
+            p[randoms[i]] = d[randoms[i]]
+            i += 1
+        }
+        //FIXME: bounds check
+        while(true){
+            let puzzle = SudokuPuzzle(data: p.map{$0 + 1})
+            do {
+                let (unique, answers) = try puzzle._uniquelySolvable()
+                if(unique){
+                    return  SudokuPuzzle(data: p.map{$0 + 1})
+                }else{
+                    if let a = answers.first, answers.count > 1{
+                        let all = SudokuPuzzle.rowValues(forRow: a.last!, size: 9)
+                        let indx = indexOf(size: 9, row: all.0, column: all.1)
+                        p[indx] = all.2
+                        i += 1
+                    }
+
+                    
+                }
+            } catch  {
+                //FIXME:  throw?
+            }
+        }
     }
     internal func removeTilUnique() -> SudokuPuzzle{
         let randoms = [Int](0..<80).shuffled()

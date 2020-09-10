@@ -33,7 +33,7 @@ class SudokuTests: XCTestCase {
     func testCreateSquare(){
        
         do {
-            let square = try SudokuPuzzle(data:[]).createSquare(ofSize: 9)
+            let square = try SudokuPuzzle.createSquare(ofSize: 9)
             XCTAssert(square.isSolved())
         } catch let e {
             XCTFail(e.localizedDescription)
@@ -205,11 +205,28 @@ class SudokuTests: XCTestCase {
         }
         
     }
+    func testMeasureCreate(){
+        
+        do {
+            let _ = try SudokuPuzzle.creatPuzzle()
+            self.measure {
+                do{
+                    let _ = try SudokuPuzzle.creatPuzzle()
+                }catch let e{
+                    XCTFail(e.localizedDescription)
+                }
+                
+            }
+        } catch let e {
+            XCTFail(e.localizedDescription)
+        }
+        
+    }
     func testCreate(){
         let s = SudokuPuzzle(data: [])
 
         do {
-            let puzzle = try s.creatPuzzle(ofDifficulty: .easy)
+            let puzzle = try SudokuPuzzle.creatPuzzle()
             print("==========")
             print(puzzle.description)
             print("==========")
