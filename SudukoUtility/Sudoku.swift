@@ -114,6 +114,24 @@ extension SudokuPuzzle{
     public func rate() throws -> DificultyRating{
         return .medium
     }
+    public func disallowedValuesForCurrentState(atIndex: Int)-> [Int]{
+        var r : [Int] = []
+        let atindexRow = atIndex / size
+        let atindexCol = atIndex % size
+        let atindexGroup = groupFromIndex(index: atIndex)
+        for i in 0..<self.data.count{
+            let row = i / size
+            let col = i % size
+            let group = groupFromIndex(index: i)
+            let check = self.data[i] != 0 && (atindexRow == row || atindexCol == col || atindexGroup == group)
+            if(check){
+                r.append(self.data[i])
+            }
+            
+            
+        }
+        return r
+    }
     public func isSolved() -> Bool{
         
         //check every item is a number

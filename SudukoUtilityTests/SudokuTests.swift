@@ -294,5 +294,28 @@ class SudokuTests: XCTestCase {
         }
         return true
     }
+    
+    func testDissallowedValuesForCurrentState(){
+        
+        let data = [
+          0 , 0 , 9 , 0 , 5 , 7 , 0 , 0 , 0 ,
+          8 , 2 , 0 , 0 , 0 , 3 , 0 , 0 , 0 ,
+          0 , 0 , 3 , 8 , 0 , 0 , 9 , 0 , 0 ,
+          0 , 6 , 0 , 0 , 9 , 0 , 3 , 0 , 0 ,
+          0 , 9 , 8 , 5 , 0 , 6 , 4 , 7 , 0 ,
+          0 , 0 , 1 , 0 , 7 , 0 , 0 , 9 , 0 ,
+          0 , 0 , 5 , 0 , 0 , 9 , 1 , 0 , 0 ,
+          0 , 0 , 0 , 7 , 0 , 0 , 0 , 4 , 9 ,
+          0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0
+        ]
+        let puzzle = SudokuPuzzle(data: data)
+        let actualAt0 = puzzle.disallowedValuesForCurrentState(atIndex: 0)
+        let expected = [2,3,5,7,8,9]
+        XCTAssert(Set(actualAt0) == Set(expected))
+        
+        let actualAt80 = puzzle.disallowedValuesForCurrentState(atIndex: 80)
+        let expected80 = [9,4,1]
+        XCTAssert(Set(actualAt80) == Set(expected80))
+    }
    
 }
