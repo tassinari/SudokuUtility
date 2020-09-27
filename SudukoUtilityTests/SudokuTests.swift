@@ -317,5 +317,40 @@ class SudokuTests: XCTestCase {
         let expected80 = [9,4,1]
         XCTAssert(Set(actualAt80) == Set(expected80))
     }
+    
+    func testEncodeDecodeWorks(){
+        let data = [
+          2 , 0 , 9 , 0 , 5 , 7 , 0 , 0 , 0 ,
+          8 , 2 , 0 , 0 , 0 , 3 , 0 , 0 , 0 ,
+          0 , 0 , 3 , 8 , 0 , 0 , 9 , 0 , 0 ,
+          0 , 6 , 0 , 0 , 9 , 0 , 3 , 0 , 0 ,
+          0 , 9 , 8 , 5 , 0 , 6 , 4 , 7 , 0 ,
+          0 , 0 , 1 , 0 , 7 , 0 , 0 , 9 , 0 ,
+          0 , 0 , 5 , 0 , 0 , 9 , 1 , 0 , 0 ,
+          0 , 0 , 0 , 7 , 0 , 0 , 0 , 4 , 9 ,
+          0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0
+        ]
+        let puzzle = SudokuPuzzle(data: data)
+        let newPuzzle = SudokuPuzzle.from(hash: puzzle.hashed)
+        XCTAssert(newPuzzle.data == puzzle.data)
+    }
+    func testEncodeDecode64Works(){
+        let data = [
+          2 , 0 , 9 , 0 , 5 , 7 , 0 , 0 , 0 ,
+          8 , 2 , 0 , 0 , 0 , 3 , 0 , 0 , 0 ,
+          0 , 0 , 3 , 8 , 0 , 0 , 9 , 0 , 0 ,
+          0 , 6 , 0 , 0 , 9 , 0 , 3 , 0 , 0 ,
+          0 , 9 , 8 , 5 , 0 , 6 , 4 , 7 , 0 ,
+          0 , 0 , 1 , 0 , 7 , 0 , 0 , 9 , 0 ,
+          0 , 0 , 5 , 0 , 0 , 9 , 1 , 0 , 0 ,
+          0 , 0 , 0 , 7 , 0 , 0 , 0 , 4 , 9 ,
+          4 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0
+        ]
+        let puzzle = SudokuPuzzle(data: data)
+        let b64 = puzzle.base64Hash
+        let newPuzzle = SudokuPuzzle.from(base64hash: b64)
+        print(b64)
+        XCTAssert(newPuzzle.data == puzzle.data)
+    }
    
 }

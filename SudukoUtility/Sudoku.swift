@@ -406,4 +406,77 @@ internal enum ConstraintType : CaseIterable{
 
 }
 
+//MARK: Game Hashing
+extension SudokuPuzzle {
+    static var lowEndMask : UInt8 =  0xF
+    static var highEndMask : UInt8 = 0xF0
+    
+    var base64Hash : String {
+        return hashed.base64EncodedString(options: [])
+    }
+    static func from(base64hash : String) -> SudokuPuzzle{
+        
+        if let data = Data(base64Encoded: base64hash){
+            return SudokuPuzzle.from(hash: data)
+        }
+        //MARK: FIXME THROW ON ERROR
+        return SudokuPuzzle()
+    }
+    static private func hashIndex(fromPosition : Int) -> Int{
+        if fromPosition % 2 == 0{
+            return fromPosition / 2
+        }else{
+            
+            return (fromPosition - 1) / 2
+        }
+    }
+    
+    var hashed : Data {
+        
+        
+        //MARK: TODO validate input is 81 
+        
+        var hashed = Data(repeating : 0 , count : 41)
+        for (i, value) in self.data.enumerated(){
+            //pack i into 4 bits
+           
+            //Get the uint8 of intrest
+            var byte = hashed[SudokuPuzzle.hashIndex(fromPosition: i)]
+            
+            //chose which end we change
+            if i % 2 == 0{
+                //even fill first half (high end)
+                let clearedValue = UInt8(value) << 4  //move value to high end
+                byte = byte & SudokuPuzzle.highEndMask  //zero out high end
+                byte = byte | clearedValue
+                
+            }else{
+                //odd fill sencond half (low end)
+                let clearedValue = UInt8(value) & SudokuPuzzle.lowEndMask
+                byte = byte | clearedValue
+            }
+            hashed[SudokuPuzzle.hashIndex(fromPosition: i)] = byte
+        }
+        
+        return hashed
+    }
+    
+    static func from(hash : Data) -> SudokuPuzzle{
+        var data = Data(repeating : 0 , count : 81)
+        for i in 0..<data.count{
+            let hashIndex = SudokuPuzzle.hashIndex(fromPosition: i)
+            let v = hash[hashIndex]
+            if i % 2 == 0 {
+                data[i] = (v >> 4) & SudokuPuzzle.lowEndMask
+            }else{
+                data[i] = v & SudokuPuzzle.lowEndMask
+            }
+        }
+        var arr = Array<UInt8>(repeating: 0, count: data.count/MemoryLayout<UInt8>.stride)
+        _ = arr.withUnsafeMutableBytes { data.copyBytes(to: $0) }
+        return SudokuPuzzle(data: arr.map{Int($0)})
+    }
+    
+}
+
 
