@@ -352,5 +352,26 @@ class SudokuTests: XCTestCase {
         print(b64)
         XCTAssert(newPuzzle.data == puzzle.data)
     }
+    
+    func testThatGivensAreSet(){
+        do {
+            for _ in 0..<10{
+                
+                let puzzle = try SudokuPuzzle.creatPuzzle()
+                var actualGivens : [Int] =  []
+                for (i,v) in puzzle.data.enumerated(){
+                    if(v > 0){
+                        actualGivens.append(i)
+                    }
+                }
+                XCTAssert(actualGivens == puzzle.givens)
+            }
+            
+        } catch  {
+            XCTFail("could not create puzzle")
+        }
+        
+        
+    }
    
 }

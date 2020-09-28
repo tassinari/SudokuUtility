@@ -33,6 +33,10 @@ struct SudokuPuzzleError : Error  {
 public struct SudokuPuzzle{
     public var data : [Int]
     var size : Int
+    private var _givens : [Int]?
+    public var givens : [Int] {
+       return _givens ?? []
+    }
     private var _data : [Int] {
         return data.map{$0 - 1}
     }
@@ -259,8 +263,18 @@ extension SudokuPuzzle{
            }
            return sudukoPuzzleFromRows(answers)
     }
+    private func determineGivens() -> [Int]{
+        var givenindices : [Int] = []
+        for (i,v) in self.data.enumerated(){
+            if(v > 0){
+                givenindices.append(i)
+            }
+        }
+       return givenindices
+    }
 
     public static func creatPuzzle() throws -> SudokuPuzzle{
+        
         return try createSquare(ofSize: 9).addTilUnique()
 
     }
@@ -279,7 +293,9 @@ extension SudokuPuzzle{
             do {
                 let (unique, answers) = try puzzle._uniquelySolvable()
                 if(unique){
-                    return  SudokuPuzzle(data: p.map{$0 + 1})
+                    var puzzle = SudokuPuzzle(data: p.map{$0 + 1})
+                    puzzle._givens = puzzle.determineGivens()
+                    return puzzle
                 }else{
                     if let a = answers.first, answers.count > 1{
                         let all = SudokuPuzzle.rowValues(forRow: a.last!, size: 9)
@@ -445,9 +461,9 @@ extension SudokuPuzzle {
             
             //chose which end we change
             if i % 2 == 0{
-                //even fill first half (high end)
+                //even, fill first half (high end)
                 let clearedValue = UInt8(value) << 4  //move value to high end
-                byte = byte & SudokuPuzzle.highEndMask  //zero out high end
+                byte = byte & SudokuPuzzle.highEndMask  //zero out low end
                 byte = byte | clearedValue
                 
             }else{
