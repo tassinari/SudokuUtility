@@ -332,6 +332,13 @@ class SudokuTests: XCTestCase {
         ]
         let puzzle = SudokuPuzzle(data: data)
         let newPuzzle = SudokuPuzzle.from(hash: puzzle.hashed)
+        var actualGivens : [Int] =  []
+        for (i,v) in data.enumerated(){
+            if(v > 0){
+                actualGivens.append(i)
+            }
+        }
+        XCTAssert(actualGivens == newPuzzle.givens)
         XCTAssert(newPuzzle.data == puzzle.data)
     }
     func testEncodeDecode64Works(){

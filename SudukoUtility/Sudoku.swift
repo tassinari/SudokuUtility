@@ -43,6 +43,7 @@ public struct SudokuPuzzle{
     internal init(data : [Int]){
         self.data = data
         self.size = 9
+        _givens = self.determineGivens()
     }
     private init(){
         
@@ -424,8 +425,8 @@ internal enum ConstraintType : CaseIterable{
 
 //MARK: Game Hashing
 extension SudokuPuzzle {
-    static var lowEndMask : UInt8 =  0xF
-    static var highEndMask : UInt8 = 0xF0
+    static var lowEndMask : UInt64 =  0xFF
+//    static var highEndMask : UInt8 = 0xF0
     
     var base64Hash : String {
         return hashed.base64EncodedString(options: [])
@@ -438,55 +439,75 @@ extension SudokuPuzzle {
         //MARK: FIXME THROW ON ERROR
         return SudokuPuzzle()
     }
-    static private func hashIndex(fromPosition : Int) -> Int{
-        if fromPosition % 2 == 0{
-            return fromPosition / 2
-        }else{
-            
-            return (fromPosition - 1) / 2
-        }
-    }
     
     var hashed : Data {
         
         
         //MARK: TODO validate input is 81 
         
-        var hashed = Data(repeating : 0 , count : 41)
+        var hashed = Data()
+        var buffer : UInt64 = 0
+        var byteCount = 0
         for (i, value) in self.data.enumerated(){
-            //pack i into 4 bits
-           
-            //Get the uint8 of intrest
-            var byte = hashed[SudokuPuzzle.hashIndex(fromPosition: i)]
+            //pack i into 5 bits, leftmost bit is a given flag, next 4 bits are encoded value, zero is a blank
             
-            //chose which end we change
-            if i % 2 == 0{
-                //even, fill first half (high end)
-                let clearedValue = UInt8(value) << 4  //move value to high end
-                byte = byte & SudokuPuzzle.highEndMask  //zero out low end
-                byte = byte | clearedValue
-                
-            }else{
-                //odd fill sencond half (low end)
-                let clearedValue = UInt8(value) & SudokuPuzzle.lowEndMask
-                byte = byte | clearedValue
+            //prep buffer by shifting 5 left
+            buffer = buffer << 5
+            
+            //take value at i and add it into buffer
+            var bits : UInt8 = self.givens.contains(i) ? 0x10 : 0
+            bits = bits | (UInt8(value) & 0xf)
+            buffer = buffer | UInt64(bits)
+            byteCount += 1
+            var offset = 32
+            if byteCount == 8 || i == 80{
+                //empty the buffer into the hashed Data
+                for _ in 1...5{
+                    let chunk = UInt8((buffer >> offset ) & SudokuPuzzle.lowEndMask )
+                    hashed.append(chunk)
+                    offset -= 8
+                }
+                buffer = 0
+                byteCount = 0
+                offset = 32
             }
-            hashed[SudokuPuzzle.hashIndex(fromPosition: i)] = byte
         }
-        
         return hashed
     }
     
     static func from(hash : Data) -> SudokuPuzzle{
         var data = Data(repeating : 0 , count : 81)
-        for i in 0..<data.count{
-            let hashIndex = SudokuPuzzle.hashIndex(fromPosition: i)
-            let v = hash[hashIndex]
-            if i % 2 == 0 {
-                data[i] = (v >> 4) & SudokuPuzzle.lowEndMask
-            }else{
-                data[i] = v & SudokuPuzzle.lowEndMask
+        var givens : [Int] = []
+        for i in 0..<81{
+            let bitIndex = i * 5
+            let byteIndex = bitIndex / 8
+            let bitOffset = bitIndex % 8
+            if(byteIndex >= hash.count - 1) {
+                break
             }
+            
+            //reconstruct given flag
+            
+            if hash[byteIndex] << bitOffset & 0x80 == 0x80{
+                givens.append(i)
+            }
+            let byte : UInt8 =  hash[byteIndex]
+            if(bitOffset > 3){
+                //Need 2 bytes and reconstruct
+                let nextByte = hash[byteIndex + 1]
+                let remainderOnNext = bitOffset - 3
+                let frontEnd = byte << remainderOnNext
+                let tailEnd = nextByte >> (8 - remainderOnNext)
+                data[i] = (frontEnd | tailEnd) & 0xf
+            }
+            else{
+                //data is in only 1 byte
+                let value = (((byte << bitOffset) & 0xf8) >> 3) & 0xf
+                
+                data[i] = value
+            }
+            
+            
         }
         var arr = Array<UInt8>(repeating: 0, count: data.count/MemoryLayout<UInt8>.stride)
         _ = arr.withUnsafeMutableBytes { data.copyBytes(to: $0) }
