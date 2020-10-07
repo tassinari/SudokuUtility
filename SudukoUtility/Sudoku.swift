@@ -7,8 +7,24 @@
 //
 
 import Foundation
-public enum DificultyRating{
-    case easy,medium, hard, extraHard
+public enum DificultyRating : Int16{
+    case notRated = 0, easy = 1,medium = 2, hard = 3 , extraHard = 4
+    
+    public var userLocalizedStringValue : String{
+        switch self {
+        case .notRated:
+            return "Not Rated"
+        case .easy:
+            return "Easy"
+        case .medium:
+            return "Medium"
+        case .hard:
+            return "Hard"
+        case .extraHard:
+            return "Extra Hard"
+        
+        }
+    }
 }
 
 struct SudokuPuzzleError : Error  {
@@ -426,12 +442,11 @@ internal enum ConstraintType : CaseIterable{
 //MARK: Game Hashing
 extension SudokuPuzzle {
     static var lowEndMask : UInt64 =  0xFF
-//    static var highEndMask : UInt8 = 0xF0
-    
-    var base64Hash : String {
+   
+    public var base64Hash : String {
         return hashed.base64EncodedString(options: [])
     }
-    static func from(base64hash : String) -> SudokuPuzzle{
+    public  static func from(base64hash : String) -> SudokuPuzzle{
         
         if let data = Data(base64Encoded: base64hash){
             return SudokuPuzzle.from(hash: data)
@@ -440,7 +455,7 @@ extension SudokuPuzzle {
         return SudokuPuzzle()
     }
     
-    var hashed : Data {
+    public var hashed : Data {
         
         
         //MARK: TODO validate input is 81 
@@ -475,7 +490,7 @@ extension SudokuPuzzle {
         return hashed
     }
     
-    static func from(hash : Data) -> SudokuPuzzle{
+    public  static func from(hash : Data) -> SudokuPuzzle{
         var data = Data(repeating : 0 , count : 81)
         var givens : [Int] = []
         for i in 0..<81{
@@ -511,7 +526,9 @@ extension SudokuPuzzle {
         }
         var arr = Array<UInt8>(repeating: 0, count: data.count/MemoryLayout<UInt8>.stride)
         _ = arr.withUnsafeMutableBytes { data.copyBytes(to: $0) }
-        return SudokuPuzzle(data: arr.map{Int($0)})
+        var puzzle = SudokuPuzzle(data: arr.map{Int($0)})
+        puzzle._givens = givens
+        return puzzle
     }
     
 }
