@@ -132,9 +132,7 @@ extension SudokuPuzzle{
         
         return []
     }
-    public func rate() throws -> DificultyRating{
-        return .medium
-    }
+   
     public func disallowedValuesForCurrentState(atIndex: Int)-> [Int]{
         var r : [Int] = []
         let atindexRow = atIndex / size
