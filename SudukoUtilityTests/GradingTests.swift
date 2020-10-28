@@ -218,4 +218,21 @@ class GradingTests: XCTestCase {
         
         
     }
+    
+    func testRate(){
+        do {
+            let puzzle = try SudokuPuzzle.creatPuzzle()
+            print("==========")
+            print(puzzle.description)
+            print("==========")
+            print("size: \(puzzle.data.filter{$0 != 0}.count)")
+            let solved = try puzzle.solvedCopy()
+            print("==========")
+            print(solved.description)
+            print("==========")
+            let rated = try puzzle.rate()
+        } catch let e {
+            XCTFail(e.localizedDescription)
+        }
+    }
 }
