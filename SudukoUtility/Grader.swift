@@ -43,13 +43,11 @@ extension SudokuPuzzle{
     fileprivate struct SolveData{
         let recurseCount : Int
         let currentPuzzle : SudokuPuzzle
+        let possibleValuesMatrix : [Int : [Int]]
         let solveLog : [HintResult]
     }
     fileprivate func _rate(solveData : SolveData) throws -> SolveData{
         if(solveData.currentPuzzle.isSolved()){
-            
-            //TODO: we are done, signal it
-            
             return solveData
         }
         if(solveData.recurseCount > 100){
@@ -57,7 +55,7 @@ extension SudokuPuzzle{
         }
         var puzzle = solveData.currentPuzzle
         //Stage 1 If any naked singles, add and recurse
-        let nakedSingles = solveData.currentPuzzle.nakedSingles()
+        let nakedSingles = solveData.currentPuzzle.nakedSingles(possibles: solveData.possibleValuesMatrix)
         if(nakedSingles.answers.count > 0){
             for key in nakedSingles.answers.keys{
                 guard let value = nakedSingles.answers[key] else {continue}
@@ -65,10 +63,10 @@ extension SudokuPuzzle{
             }
             var pastResult = solveData.solveLog
             pastResult.append(HintResult.answers(nakedSingles))
-            return try _rate(solveData: SolveData(recurseCount: solveData.recurseCount + 1, currentPuzzle: puzzle, solveLog: pastResult))
+            return try _rate(solveData: SolveData(recurseCount: solveData.recurseCount + 1, currentPuzzle: puzzle,possibleValuesMatrix: solveData.possibleValuesMatrix, solveLog: pastResult))
         }
         //Stage 2 If any hidden singles, add and recurse
-        let hiddenSingles = solveData.currentPuzzle.hiddenSingles()
+        let hiddenSingles = solveData.currentPuzzle.hiddenSingles(possibles: solveData.possibleValuesMatrix)
         if(hiddenSingles.answers.count > 0){
             for key in hiddenSingles.answers.keys{
                 guard let value = hiddenSingles.answers[key] else {continue}
@@ -76,9 +74,15 @@ extension SudokuPuzzle{
             }
             var pastResult = solveData.solveLog
             pastResult.append(HintResult.answers(hiddenSingles))
-            return try _rate(solveData: SolveData(recurseCount: solveData.recurseCount + 1, currentPuzzle: puzzle, solveLog: pastResult))
+            return try _rate(solveData: SolveData(recurseCount: solveData.recurseCount + 1, currentPuzzle: puzzle, possibleValuesMatrix: solveData.possibleValuesMatrix, solveLog: pastResult))
         }
-        //Stage  Find any naked pairs, triples or quads and update possible values, recurse
+        //Stage 3 Find any naked pairs, triples or quads and update possible values, recurse
+        
+        let nakedSets = solveData.currentPuzzle.nakedSets(possibles: solveData.possibleValuesMatrix)
+        if(nakedSets.count > 0){
+            
+        }
+        
         
         return solveData
     }
@@ -133,10 +137,9 @@ extension SudokuPuzzle{
         }
         return data
     }()
-    
-    public var possibleValueMatrix : [Int : [Int]] {
+    private func possibleValues(from: [Int]) -> [Int : [Int]]{
         var dict : [Int : [Int]] = [:]
-        for (i,v) in self.data.enumerated(){
+        for (i,v) in from.enumerated(){
             if v > 0{
                 continue
             }
@@ -150,15 +153,17 @@ extension SudokuPuzzle{
         }
         return dict
     }
+    public var possibleValueMatrix : [Int : [Int]] {
+        return self.possibleValues(from: self.data)
+    }
    
     
     
     
     
-    private func houseCheck(_ house : House) -> Set<PossiblesHint>{
+    private func houseCheck(_ house : House, possibles: [Int : [Int]]) -> Set<PossiblesHint>{
         
         var hintResults : Set<PossiblesHint> = Set()
-        let possibles = possibleValueMatrix
         let freeSquareCount = house.memberIndices.filter{self.data[$0] == 0}.count
         let allPossibleValues = Array(Set(house.memberIndices.map{possibles[$0] ?? []}.flatMap{$0}))
         let combos = allPossibleValues.combinations.filter({$0.count < 5 && $0.count > 1}).map({Set($0)})
@@ -183,8 +188,8 @@ extension SudokuPuzzle{
     }
     
     //Naked Single
-    func nakedSingles() -> AnswerHint{
-        let data = self.possibleValueMatrix.mapValues { (arr) -> Int in
+    func nakedSingles(possibles : [Int : [Int]]) -> AnswerHint{
+        let data = possibles.mapValues { (arr) -> Int in
             if arr.count == 1{
                 return arr.first!
             }
@@ -194,17 +199,21 @@ extension SudokuPuzzle{
         }
         return AnswerHint(type: .nakedSingle, answers: data)
     }
+    @available(*, deprecated, message: "Deprecated, use nakedSingles(possibles: : [Int : [Int]])")
+    func nakedSingles() -> AnswerHint{
+        return self.nakedSingles(possibles: self.possibleValueMatrix)
+    }
     //Hidden Single
-    func hiddenSingles() -> AnswerHint{
+    func hiddenSingles(possibles : [Int : [Int]]) -> AnswerHint{
         var hiddens : [Int : Int] = [:]
-        for i in possibleValueMatrix.keys{
-            guard let values = possibleValueMatrix[i] else{
+        for i in possibles.keys{
+            guard let values = possibles[i] else{
                 continue
             }
             guard let houses = Self.houseToIndexMap[i] else { continue }
             for house in houses{
                 let allpossiblesNotIncludingCurrent = house.memberIndices.map { (index) -> [Int] in
-                    guard let values = possibleValueMatrix[index], index != i else { return [] }
+                    guard let values = possibles[index], index != i else { return [] }
                     return values
                 }.flatMap{$0}
                 let hidden = Set<Int>(values).subtracting(allpossiblesNotIncludingCurrent)
@@ -217,20 +226,32 @@ extension SudokuPuzzle{
         
         return AnswerHint(type: .hiddenSingle, answers: hiddens)
     }
+    @available(*, deprecated, message: "Deprecated, use hiddenSingles(possibles: : [Int : [Int]])")
+    func hiddenSingles() -> AnswerHint{
+        self.hiddenSingles(possibles: self.possibleValueMatrix)
+    }
     
     
     //Naked Pairs/triples/quads
     
     //If n squares have n number of the same values its a naked pair,  ie only 2 cells have 3/9 they are a naked pair.  3 & 9 can only be in those two squares
-    
-    func nakedSets() -> [PossiblesHint]{
+    func nakedSets(possibles : [Int : [Int]]) -> [PossiblesHint]{
         //if a square has only n numbers, if another peer square has the same numbers, its a naked pair and can elimintate those number sfrom all other squares
-        return Self.allHouses.map{self.houseCheck($0)}.flatMap{$0}.filter{$0.type == .nakedSet}
+        return Self.allHouses.map{self.houseCheck($0, possibles: possibles)}.flatMap{$0}.filter{$0.type == .nakedSet}
+    }
+    @available(*, deprecated, message: "Deprecated, use nakedSets(possibles: : [Int : [Int]])")
+    func nakedSets() -> [PossiblesHint]{
+        return self.nakedSets(possibles: self.possibleValueMatrix)
     }
     
     //Hidden Pairs/triples/quads
+    func hiddenSets(possibles: [Int : [Int]]) -> [PossiblesHint]{
+        return Self.allHouses.map{self.houseCheck($0, possibles: possibles)}.flatMap{$0}.filter{$0.type == .hiddenSet}
+
+    }
+    @available(*, deprecated, message: "Deprecated, use hiddenSets(possibles: : [Int : [Int]])")
     func hiddenSets() -> [PossiblesHint]{
-        return Self.allHouses.map{self.houseCheck($0)}.flatMap{$0}.filter{$0.type == .hiddenSet}
+        self.hiddenSets(possibles: self.possibleValueMatrix)
 
     }
     
