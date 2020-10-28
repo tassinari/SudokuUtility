@@ -30,7 +30,7 @@ public enum DificultyRating : Int16{
 struct SudokuPuzzleError : Error  {
     
     enum SudokuPuzzleErrorType{
-        case noSolutions, multipleSolutions, unsolvable
+        case noSolutions, multipleSolutions, unsolvable, ratingError
     }
     var localizedDescription : String {
         return debugInfo

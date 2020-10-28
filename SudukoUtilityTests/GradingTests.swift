@@ -61,13 +61,13 @@ class GradingTests: XCTestCase {
         ]
         let puzzle = SudokuPuzzle(data: data)
         let naked = puzzle.nakedSingles()
-        XCTAssert(naked == [73 : 1, 1 : 3, 44 : 9])
+        XCTAssert(naked.answers == [73 : 1, 1 : 3, 44 : 9])
         
         let puzzle2 = SudokuPuzzle.from(base64hash: "AC4AAAAEwABUAAAqAAAApa8QVACdgYAAALgACWAAtQAIzBUAI0ADIKTBi8QWACIM2nIAAAAAAA==")
         
         let naked2 = puzzle2.nakedSingles()
         print(puzzle2.description)
-        XCTAssert(naked2 == [31:2,75:5,17:1,70:5,72:7])
+        XCTAssert(naked2.answers == [31:2,75:5,17:1,70:5,72:7])
         
         
     }
@@ -86,7 +86,7 @@ class GradingTests: XCTestCase {
         ]
         let puzzle = SudokuPuzzle(data: data)
         let hidden = puzzle.hiddenSingles()
-        XCTAssert(hidden == [1 : 3, 62 : 3, 71 : 7])
+        XCTAssert(hidden.answers == [1 : 3, 62 : 3, 71 : 7])
     }
     func testNakedPairs(){
         //http://www.sudokubeginner.com/naked-pair/
