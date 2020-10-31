@@ -293,6 +293,8 @@ extension SudokuPuzzle{
         return try createSquare(ofSize: 9).addTilUnique()
 
     }
+    
+    //best 29 average
     internal func addTilUnique() -> SudokuPuzzle{
         let randoms = [Int](0..<80).shuffled()
         var i = 0
@@ -313,7 +315,9 @@ extension SudokuPuzzle{
                     return puzzle
                 }else{
                     if let a = answers.first, answers.count > 1{
-                        let all = SudokuPuzzle.rowValues(forRow: a.last!, size: 9)
+                        let b = answers[1]
+                        let uniqueRows = Set(a).subtracting(b)
+                        let all = SudokuPuzzle.rowValues(forRow: uniqueRows.randomElement()!, size: 9)
                         let indx = indexOf(size: 9, row: all.0, column: all.1)
                         p[indx] = all.2
                         i += 1
@@ -326,6 +330,11 @@ extension SudokuPuzzle{
             }
         }
     }
+    
+    
+    
+    //FIXME:this works poorly delete (average size is 44)
+    @available(*, deprecated, message: "Not good, will be  deleted")
     internal func removeTilUnique() -> SudokuPuzzle{
         let randoms = [Int](0..<80).shuffled()
         var i = 0

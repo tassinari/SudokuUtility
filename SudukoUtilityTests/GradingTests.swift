@@ -219,20 +219,91 @@ class GradingTests: XCTestCase {
         
     }
     
+    
+    
+
+    
+    /*
+     This is a 27 given puzzle which will need hidden sets:
+     BEAAAqDIAABG4JgnQAMgAC1gAACIAXiAAL5AAAAAlUAAAyAAAABKgMUACQIgACYAABkAAAAAAA==
+     */
+    
     func testRate(){
         do {
-            let puzzle = try SudokuPuzzle.creatPuzzle()
-            print("==========")
-            print(puzzle.description)
-            print("==========")
-            print("size: \(puzzle.data.filter{$0 != 0}.count)")
-            let solved = try puzzle.solvedCopy()
-            print("==========")
-            print(solved.description)
-            print("==========")
-            let rated = try puzzle.rate()
+            for _ in 0..<300{
+                let puzzle = try SudokuPuzzle.creatPuzzle()
+//                print("==========")
+//                print(puzzle.description)
+//                print("==========")
+//                print("size: \(puzzle.data.filter{$0 != 0}.count)")
+               // let solved = try puzzle.solvedCopy()
+//                print("==========")
+//                print(solved.description)
+//                print("==========")
+                let rated = try puzzle.rate()
+                if rated.solveLog.contains(where: { (hint) -> Bool in
+                    switch hint{
+                    case .answers( _):
+                        break
+                    case .possibles(let p):
+                        print("possibles using \(p.type)")
+                        return true
+                    }
+                    return false
+                }){
+                    print(puzzle.base64Hash)
+                }
+              //  XCTAssert(solved.data == rated.data,"failed on \(puzzle.base64Hash)")
+            }
         } catch let e {
             XCTFail(e.localizedDescription)
         }
     }
+    
+    func testHiddenSet(){
+        let puzzles = [
+            "BYAAAAAFJgqCQAAjkAAAwCoI0AAAATBIAAYtkAAABMAJAACIAAADAAAyCgK3BS0QAAAAAAAAAA==",
+            "BTMwAqC1QAAAAMgBEAAVwAEwAAAAMABKt5giAFAAxEAAAAAFQAACgAUiDMwYBgAJAAAAAAAAAA==",
+            "ADIAABSIJgAAAAXqCQAAwAAAAAC8QAAAAMgACwKAsCQLgAAAAYADOAWBUAAUyAEwUtEAAAAAAA==",
+            "wAAAAiCQL1ACgLAAAAMgBQAAXBQAATsAAL5ACoATriIAABYAAAkCNQYoAAAABEAATBUAAAAAAA==",
+            "rQFgABmQAYuAAKgmDIIgBYAAAAAAMAzUFLAAAAAAmC9QABEGQWkAAAVwCQAAuAAAABQAAAAAAA==",
+            "AAAAAiC2QVAAAJAkCIAAqCgAXBSQAZAAAAABUEQABcEwAAAAMzAAGAWpWOQAqDMgXBgAAAAAAA==",
+            "AAAAAAAE6gBgAJAzQAJAAC4AABaIAAuAAATBmQJgBcFAAAAFwWzEAAToAGAArYAAAlQAAAAAAA==",
+            "yAAATAAFQAAAE4gAAFgAuAAAYuAFgAAAE6AAAAIgBbAAXACuQAiAAKXjMFcgsAAK3BQAAAAAAA==",
+            "ACIMgADAAWACVKgAAAKABkAAYBEF6SBcALZqAFQAAAFsZwAAKgBcAKgACwJAAAGZAwAAAAAAAA==",
+            "BUEQTwAAAUAAAAAtPAAAAAAAZAAALgAAGQAjgALgACoJgoAALZuAFwAwAAAAqCwJAAAAAAAAFA==",
+            "AAE6AsCNAABiIAAACNgABQAAAACVQAACQMgwAAKWvUAAABgFAABEAIgAC1wAADIAABIAAAAAAA==",
+            "AAFgAoDAKgBgAAXAAAAArkAAYnIAAUACN6gwCdqAADAAVBMAARACQAABOQKZBgFAABUAAAAAAA==",
+            "rMAAUAAAAAAAAAVkDIAXwAFK2BIAAABcEQWoAGQAnQAAAjYAMgBKgAAoAAJxAAEgRBgAAAAAAA==",
+            "BkAAAAAAAABMFwAsAFwABQFAABYGARBYAAABIAASmAFQXBEGJAAAFQABedgAAC9gAoAAAAAAAA==",
+            "qCYMABkAAABMAAABkAAXACcbgAAAJAwAFQWADIJgvLEQUAAEgAAAFwRpmdqgBaQAABMAAAAAAA==",
+            "BUAAAiAE7gACQAABYAMAACQAUqCYAWBIAAAoCdozoAFZAAAAIgBMAAXAAAM4ACswXAAAAAAAAA==",
+            "BcAJVtEALToAFQAAAAAAADIAAAAAMAACuAAncEsAAC4KAuAAKAAAAAABkALUqAAAYBkAAAAAAA==",
+            "qAALRBMAAAyAFQRAAGAABcAAXBLAAAAAEwAAC884AAAAWzO0QAAAAAABWwATxIAAABEAAAAAFA==",
+            "kCkwAAAAJgAAFAABgAIgqDIAAAAAJWwCwAAAAFL5AAAAAACIASBWgAABXOAAvUFgABkAAAAAAA==",
+            "wAAIguAALgBYAATBKoAAAAAMAyAEgAAAEZToCtJyAAAAAADAKRAAAAABkAJAvGkgAAAAAAAAAA==",
+            "BIGQAwC4AAAAEgAAAAJABTIAABm9gAiAALSzUAAYACMwSADIAAACtMVBEAAAmAFaZAAAAAAAAA==",
+            "kCIAWAAAAVwAAASyAAAABHAAZrYGKAoAAJZqAAAAiCgLAwC4JgACoASpkFwAACwAYAAAAAAAAA==",
+            "AC4AAADIAABS4MAoAAKyAAAAVuAAAAAAFgTkDALAAAF6AiCgAWACoKyACObgBeYAVBYAAAAAAA==",
+            "ADIAYBIFrgjMAAAAAAAAAC1wABiwK0qAEwAAAAJUuAAAABGYAAxcAAAAAFASlWwLgjMAAAAAAA==",
+            "BTIAAAAAAAyAEgAACt6AwAAARtgFwTBi4AZAAAMgBcEagAAAAAni4ASADAI2mAFAAzIAAAAAAA==",
+            "AAAAABIGZ0BcAAAAAALAmCgAAzUAAABG4AWBkFAVuCYLAAAAKVBeQAWAAGJgiCWAAAAAAAAAAA==",
+            "wCoAWoAFIgAAAAWBMAAYBEAAABkEgABYGAVBcAAZBEALABkEgAsAAJXBgEQAACeQAAAAAAAAFQ==",
+            "ACYAABkEQAoDIAAAAFgAiC4AAqAFsAAAAMXBQAAABEAL5ADILArMEwRBcAAAxUAAABEAAAAAAA=="
+            ]
+        for hash in puzzles{
+            let puzzle = SudokuPuzzle.from(base64hash: hash)
+            let solved = try? puzzle.solvedCopy()
+            let rated = try? puzzle.rate()
+            if(solved!.data == rated!.currentPuzzle.data){
+                print("solved")
+            }else{
+                print("fail")
+            }
+            //XCTAssert(solved!.data == rated!.data,"failed on \(puzzle.base64Hash)")
+        }
+        
+        
+    }
 }
+

@@ -223,8 +223,7 @@ class SudokuTests: XCTestCase {
         
     }
     func testCreate(){
-        let s = SudokuPuzzle(data: [])
-
+       
         do {
             let puzzle = try SudokuPuzzle.creatPuzzle()
             print("==========")
@@ -241,6 +240,25 @@ class SudokuTests: XCTestCase {
        
 
     }
+    func testCreateSize(){
+        let count = 50
+        var sizes : [Int] = []
+        do {
+            for _ in 0..<count{
+                let puzzle = try SudokuPuzzle.creatPuzzle()
+                sizes.append(puzzle.data.filter{$0 != 0}.count)
+            }
+            let average = sizes.reduce(0,+) / count
+            //print("size average is \(average)")
+            XCTAssert(average < 31,"Average is off, should be ~29 but is \(average)")
+           
+        } catch let e {
+            XCTFail(e.localizedDescription)
+        }
+        
+    }
+    
+    
     func testThatMultipleSolvesWorks(){
         let data = [
           0 , 0 , 9 , 0 , 5 , 7 , 0 , 0 , 0 ,
