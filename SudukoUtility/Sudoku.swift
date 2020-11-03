@@ -293,7 +293,7 @@ extension SudokuPuzzle{
         return try createSquare(ofSize: 9).addTilUnique()
 
     }
-    
+    //TODO:  Check is this biased towards more squares revealed at bottom?
     //best 29 average
     internal func addTilUnique() -> SudokuPuzzle{
         let randoms = [Int](0..<80).shuffled()

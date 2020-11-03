@@ -218,6 +218,27 @@ class GradingTests: XCTestCase {
         
         
     }
+    func testXWing(){
+        //https://www.sudocue.net/guide.php
+  
+        let data = [
+         0 , 2 , 8 , 7 , 0 , 9 , 6 , 5 , 0 ,
+         7 , 5 , 4 , 0 , 0 , 3 , 9 , 8 , 0 ,
+         0 , 6 , 9 , 0 , 0 , 0 , 0 , 0 , 7 ,
+         0 , 3 , 1 , 0 , 9 , 7 , 0 , 6 , 0 ,
+         0 , 7 , 6 , 3 , 0 , 0 , 0 , 9 , 0 ,
+         0 , 9 , 5 , 0 , 0 , 4 , 3 , 7 , 0 ,
+         9 , 1 , 7 , 4 , 5 , 6 , 0 , 0 , 0 ,
+         5 , 4 , 2 , 9 , 3 , 8 , 7 , 1 , 6 ,
+         6 , 8 , 3 , 1 , 7 , 2 , 5 , 4 , 9
+        ]
+        let puzzle = SudokuPuzzle(data: data)
+        let xwing = puzzle.xwing(possibles: puzzle.possibleValueMatrix)
+        let sets = [Set(arrayLiteral: 49,13),Set(arrayLiteral: 53,17)]
+        let _ = sets.map{ XCTAssert(xwing.map{$0.indices}.contains($0))}
+        
+        
+    }
     
     
     
@@ -236,28 +257,72 @@ class GradingTests: XCTestCase {
 //                print(puzzle.description)
 //                print("==========")
 //                print("size: \(puzzle.data.filter{$0 != 0}.count)")
-               // let solved = try puzzle.solvedCopy()
+                let solved = try puzzle.solvedCopy()
 //                print("==========")
 //                print(solved.description)
 //                print("==========")
                 let rated = try puzzle.rate()
-                if rated.solveLog.contains(where: { (hint) -> Bool in
-                    switch hint{
-                    case .answers( _):
-                        break
+                let typesUsed = rated.solveLog.reduce(Set<HintType>(), { (hintSet, hintResult) -> Set<HintType> in
+                    var set = hintSet
+                    switch hintResult{
+                    case .answers( let answer):
+                        set.insert(answer.type)
+                       
                     case .possibles(let p):
-                        print("possibles using \(p.type)")
-                        return true
+                        set.insert(p.type)
                     }
-                    return false
-                }){
-                    print(puzzle.base64Hash)
+                    return set
+                })
+               
+                if(solved.data == rated.currentPuzzle.data){
+                    print("solved -- \(typesUsed) -- \(puzzle.base64Hash)")
+                }else{
+                    print("fail -- \(typesUsed)  --  \(puzzle.base64Hash)")
                 }
+            
               //  XCTAssert(solved.data == rated.data,"failed on \(puzzle.base64Hash)")
-            }
+        }
         } catch let e {
             XCTFail(e.localizedDescription)
         }
+    }
+    
+    func testHiddenSetsThatProduce(){
+        let puzzles = [
+            "ADF5AACMgAACoAYBMEcWyCQAABQEgABgAMgiC4AVwCIMgyAAAAoAAKAnEAAZACQKgAAAAAAAAA==",
+            "AAAAAAAGagBgEQAlcAAAwCgAAkAAAAAAGagtgEQAxMFwArkEwAAAAKAiAALXuAFgZqAAAAAAAA==",  //<--this registers
+            
+            "ACYJZAAAAABQAIzjIAAAwAAJ1vEAAUACgAAsAEgABOlQAAAALgADAKgBgFMgBEAASBcAAAAAAA=="
+            
+            ]
+        for hash in puzzles{
+            let puzzle = SudokuPuzzle.from(base64hash: hash)
+            let solved = try? puzzle.solvedCopy()
+            let rated = try? puzzle.rate()
+            
+            let typesUsed = rated?.solveLog.reduce(Set<HintType>(), { (hintSet, hintResult) -> Set<HintType> in
+                var set = hintSet
+                switch hintResult{
+                case .answers( let answer):
+                    set.insert(answer.type)
+                   
+                case .possibles(let p):
+                    set.insert(p.type)
+                }
+                return set
+            })
+            if let types = typesUsed{
+                if(solved!.data == rated!.currentPuzzle.data){
+                    print("solved -- \(types)")
+                }else{
+                    print("fail -- \(types)")
+                }
+            }
+            
+            //XCTAssert(solved!.data == rated!.data,"failed on \(puzzle.base64Hash)")
+        }
+        
+        
     }
     
     func testHiddenSet(){
@@ -295,11 +360,26 @@ class GradingTests: XCTestCase {
             let puzzle = SudokuPuzzle.from(base64hash: hash)
             let solved = try? puzzle.solvedCopy()
             let rated = try? puzzle.rate()
-            if(solved!.data == rated!.currentPuzzle.data){
-                print("solved")
-            }else{
-                print("fail")
+            
+            let typesUsed = rated?.solveLog.reduce(Set<HintType>(), { (hintSet, hintResult) -> Set<HintType> in
+                var set = hintSet
+                switch hintResult{
+                case .answers( let answer):
+                    set.insert(answer.type)
+                   
+                case .possibles(let p):
+                    set.insert(p.type)
+                }
+                return set
+            })
+            if let types = typesUsed{
+                if(solved!.data == rated!.currentPuzzle.data){
+                    print("solved -- \(types)")
+                }else{
+                    print("fail -- \(types)")
+                }
             }
+            
             //XCTAssert(solved!.data == rated!.data,"failed on \(puzzle.base64Hash)")
         }
         
