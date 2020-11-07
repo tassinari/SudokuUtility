@@ -241,7 +241,7 @@ class SudokuTests: XCTestCase {
 
     }
     func testCreateSize(){
-        let count = 50
+        let count = 40
         var sizes : [Int] = []
         do {
             for _ in 0..<count{
