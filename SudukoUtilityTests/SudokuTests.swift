@@ -241,7 +241,7 @@ class SudokuTests: XCTestCase {
 
     }
     func testCreateSize(){
-        let count = 40
+        let count = 20
         var sizes : [Int] = []
         do {
             for _ in 0..<count{
@@ -250,8 +250,9 @@ class SudokuTests: XCTestCase {
             }
             let average = sizes.reduce(0,+) / count
             //print("size average is \(average)")
-            XCTAssert(average < 31,"Average is off, should be ~29 but is \(average)")
-           
+            XCTAssert(average < 26,"Average is off, should be ~29 but is \(average)")
+            print(average)
+            print(sizes)
         } catch let e {
             XCTFail(e.localizedDescription)
         }

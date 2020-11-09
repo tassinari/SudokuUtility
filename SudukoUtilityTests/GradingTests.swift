@@ -342,7 +342,7 @@ class GradingTests: XCTestCase {
     }
     func testRate(){
         do {
-            for _ in 0..<3{
+            for _ in 0..<300{
                 let puzzle = try SudokuPuzzle.creatPuzzle()
                 let solved = try puzzle.solvedCopy()
                 let rated = try puzzle.rate()
@@ -359,9 +359,10 @@ class GradingTests: XCTestCase {
                 })
                
                 if(solved.data == rated.currentPuzzle.data){
-                    print("solved -- \(typesUsed) -- \(puzzle.base64Hash)")
+                    print("solved (\(puzzle.givens.count)) -- \(typesUsed) -- \(puzzle.base64Hash)")
                     XCTAssert(solved.data == rated.currentPuzzle.data,"failed on \(puzzle.base64Hash)")
                 }else{
+                    print("fail")
                     print("\(puzzle.base64Hash) , \(typesUsed), \(puzzle.givens.count), \(rated.currentPuzzle.data.filter({$0 > 0}).count) ")
                 }
             

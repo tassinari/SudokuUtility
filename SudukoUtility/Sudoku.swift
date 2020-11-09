@@ -290,9 +290,72 @@ extension SudokuPuzzle{
 
     public static func creatPuzzle() throws -> SudokuPuzzle{
         
-        return try createSquare(ofSize: 9).addTilUnique()
+        return try createSquare(ofSize: 9).subtractTilGood(0)
 
     }
+    fileprivate static let maxAttemptsWhileSubtracting = 5
+    
+    private func subtractTilGood(_ recurseNumber : Int) -> SudokuPuzzle{
+        var randoms = [Int](0..<80).shuffled()
+        var history : [[Int:Int]] = []
+        var d = self.data
+        
+        //stage 1 remove first 40 symetrically
+        for _ in 1...20{
+            let candidate = randoms.removeFirst()
+            let opposite = 80 - candidate
+            history.append([candidate : d[candidate]])
+            history.append([opposite : d[opposite]])
+            d[candidate] = 0
+            d[opposite] = 0
+        }
+        
+        //step 2, remove randos individually
+        var puzzle = SudokuPuzzle(data: d)
+        do{
+            while( try puzzle.uniquelySolvable() ){
+                let candidate = randoms.removeFirst()
+                history.append([candidate : d[candidate]])
+                d[candidate] = 0
+                puzzle = SudokuPuzzle(data: d)
+            }
+            //FIXME: ugly, history items can be tuples
+            let lastKey = history.last!.keys.first!
+            let lastValue = history.last![lastKey]!
+            puzzle.data[lastKey] = lastValue
+            
+            //stage 3: try each item left individually until small
+            var shouldStop = true
+            var hasRemoved = false
+            repeat{
+                let indices = puzzle.data.indices.filter{ puzzle.data[$0] > 0}
+                shouldStop = true
+                for i in indices{
+                    let v = puzzle.data[i]
+                    puzzle.data[i] = 0
+                    let p2 = SudokuPuzzle(data: puzzle.data)
+                    if( try p2.uniquelySolvable()){
+                        shouldStop = false
+                        hasRemoved = true
+                    }
+                    else{
+                        puzzle.data[i] = v
+                    }
+                }
+            }while( !shouldStop )
+            if(!hasRemoved && recurseNumber <= Self.maxAttemptsWhileSubtracting){
+                //Its a dud, no removals in stage 3, try again until limit is reached
+                return subtractTilGood(recurseNumber + 1)
+            }
+            return SudokuPuzzle(data: puzzle.data)
+        }catch {
+            //FIXME: no throw?
+            return puzzle
+        }
+    }
+    
+    
+    
     //TODO:  Check is this biased towards more squares revealed at bottom?
     //best 29 average
     internal func addTilUnique() -> SudokuPuzzle{
@@ -328,30 +391,6 @@ extension SudokuPuzzle{
             } catch  {
                 //FIXME:  throw?
             }
-        }
-    }
-    
-    
-    
-    //FIXME:this works poorly delete (average size is 44)
-    @available(*, deprecated, message: "Not good, will be  deleted")
-    internal func removeTilUnique() -> SudokuPuzzle{
-        let randoms = [Int](0..<80).shuffled()
-        var i = 0
-        var lastvalue = 0
-        var d = self._data
-        //FIXME: bounds check
-        while(true){
-            lastvalue = d[randoms[i]]
-            d[randoms[i]] = -1
-            let puzzle = SudokuPuzzle(data: d.map{$0 + 1})
-            if let b = try? puzzle.uniquelySolvable(){
-                if(!b){
-                    d[randoms[i]] = lastvalue
-                    return  SudokuPuzzle(data: d.map{$0 + 1})
-                }
-            }
-            i += 1
         }
     }
    
