@@ -131,9 +131,9 @@ class GradingTests: XCTestCase {
 
         //let rated = p.nakedSets(possibles: p.possibleValueMatrix)
         do{
-            let rated = try p.rate()
-            XCTAssert(!Set(rated.possibleValuesMatrix[5] ?? []).contains(4) )
-            XCTAssert(!Set(rated.possibleValuesMatrix[14] ?? []).contains(4) )
+            let rated = try p.internalRate()
+            XCTAssert(!Set(rated.2.possibleValuesMatrix[5] ?? []).contains(4) )
+            XCTAssert(!Set(rated.2.possibleValuesMatrix[14] ?? []).contains(4) )
         }catch{
             XCTFail()
         }
@@ -229,11 +229,11 @@ class GradingTests: XCTestCase {
         let locked = puzzle.lockedCandidate(possibles: puzzle.possibleValueMatrix)
         let sets = [Set(arrayLiteral: 3,21)]
         let _ = sets.map{ XCTAssert(locked.map{$0.indices}.contains($0))}
-        let rated = try? puzzle.rate()
-        if(solved!.data == rated!.currentPuzzle.data){
+        let rated = try? puzzle.internalRate()
+        if(solved!.data == rated!.2.currentPuzzle.data){
             print("solved ")
         }
-        XCTAssert(solved!.data == rated!.currentPuzzle.data)
+        XCTAssert(solved!.data == rated!.2.currentPuzzle.data)
         
         
     }
@@ -318,8 +318,8 @@ class GradingTests: XCTestCase {
         ]
         let puzzle = SudokuPuzzle(data: data)
         let solved = try? puzzle.solvedCopy()
-        let rated = try? puzzle.rate()
-        let typesUsed = rated?.solveLog.reduce(Set<HintType>(), { (hintSet, hintResult) -> Set<HintType> in
+        let rated = try? puzzle.internalRate()
+        let typesUsed = rated?.2.solveLog.reduce(Set<HintType>(), { (hintSet, hintResult) -> Set<HintType> in
             var set = hintSet
             switch hintResult{
             case .answers( let answer):
@@ -331,7 +331,7 @@ class GradingTests: XCTestCase {
             return set
         })
         if let types = typesUsed{
-            if(solved!.data == rated!.currentPuzzle.data){
+            if(solved!.data == rated!.2.currentPuzzle.data){
                 print("solved -- \(types)")
             }else{
                 print("fail -- \(types)")
@@ -340,13 +340,16 @@ class GradingTests: XCTestCase {
         
         
     }
-    func testRate(){
+    func testRateScore(){
+        var data : [(SudokuPuzzle,Int,Int,Bool,String)] = []
         do {
-            for _ in 0..<300{
+            for _ in 0..<400{
                 let puzzle = try SudokuPuzzle.creatPuzzle()
+                let rated = try puzzle.internalRate()
                 let solved = try puzzle.solvedCopy()
-                let rated = try puzzle.rate()
-                let typesUsed = rated.solveLog.reduce(Set<HintType>(), { (hintSet, hintResult) -> Set<HintType> in
+                let solvedata = rated.2
+                let solvable = solvedata.currentPuzzle.data == solved.data
+                let typesUsed = solvedata.solveLog.reduce(Set<HintType>(), { (hintSet, hintResult) -> Set<HintType> in
                     var set = hintSet
                     switch hintResult{
                     case .answers( let answer):
@@ -357,16 +360,33 @@ class GradingTests: XCTestCase {
                     }
                     return set
                 })
-               
-                if(solved.data == rated.currentPuzzle.data){
-                    print("solved (\(puzzle.givens.count)) -- \(typesUsed) -- \(puzzle.base64Hash)")
-                    XCTAssert(solved.data == rated.currentPuzzle.data,"failed on \(puzzle.base64Hash)")
-                }else{
-                    print("fail")
-                    print("\(puzzle.base64Hash) , \(typesUsed), \(puzzle.givens.count), \(rated.currentPuzzle.data.filter({$0 > 0}).count) ")
+                let str = typesUsed.reduce("") { (theStr, hint) -> String in
+                    var mutableStr = theStr
+                    if mutableStr.count == 0{
+                        mutableStr = hint.description
+                    }else{
+                        mutableStr = "\(mutableStr)|\(hint.description)"
+                    }
+                    return mutableStr
                 }
-            
-                
+                data.append((puzzle,rated.0,rated.1,solvable,str))
+               
+        }
+        } catch let e {
+            XCTFail(e.localizedDescription)
+        }
+        print("data ---")
+        print("givens,HintCount,score,solvable,types")
+        for t in data{
+            print("\(t.0.data.filter({$0 > 0}).count),\(t.1),\(t.2),\(t.3 ? 1 : 0),\(t.4)")
+        }
+    }
+    func testRate(){
+        do {
+            for _ in 0..<300{
+                let puzzle = try SudokuPuzzle.creatPuzzle()
+                let rated = try puzzle.rate()
+                print(rated)
         }
         } catch let e {
             XCTFail(e.localizedDescription)
@@ -383,9 +403,9 @@ class GradingTests: XCTestCase {
         for hash in puzzles{
             let puzzle = SudokuPuzzle.from(base64hash: hash)
             let solved = try? puzzle.solvedCopy()
-            let rated = try? puzzle.rate()
+            let rated = try? puzzle.internalRate()
             
-            let typesUsed = rated?.solveLog.reduce(Set<HintType>(), { (hintSet, hintResult) -> Set<HintType> in
+            let typesUsed = rated?.2.solveLog.reduce(Set<HintType>(), { (hintSet, hintResult) -> Set<HintType> in
                 var set = hintSet
                 switch hintResult{
                 case .answers( let answer):
@@ -397,7 +417,7 @@ class GradingTests: XCTestCase {
                 return set
             })
             if let types = typesUsed{
-                if(solved!.data == rated!.currentPuzzle.data){
+                if(solved!.data == rated!.2.currentPuzzle.data){
                     print("solved -- \(types)")
                 }else{
                     print("fail -- \(types)")
@@ -444,9 +464,9 @@ class GradingTests: XCTestCase {
         for hash in puzzles{
             let puzzle = SudokuPuzzle.from(base64hash: hash)
             let solved = try? puzzle.solvedCopy()
-            let rated = try? puzzle.rate()
+            let rated = try? puzzle.internalRate()
             
-            let typesUsed = rated?.solveLog.reduce(Set<HintType>(), { (hintSet, hintResult) -> Set<HintType> in
+            let typesUsed = rated?.2.solveLog.reduce(Set<HintType>(), { (hintSet, hintResult) -> Set<HintType> in
                 var set = hintSet
                 switch hintResult{
                 case .answers( let answer):
@@ -458,7 +478,7 @@ class GradingTests: XCTestCase {
                 return set
             })
             if let types = typesUsed{
-                if(solved!.data == rated!.currentPuzzle.data){
+                if(solved!.data == rated!.2.currentPuzzle.data){
                     print("solved -- \(types)")
                 }else{
                     print("fail -- \(types)")

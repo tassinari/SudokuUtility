@@ -207,19 +207,95 @@ extension SudokuPuzzle{
         return modifiedPossibles
     }
     
-    internal func rate() throws -> SolveData{
-        
-        let solvedData = try _rate(solveData: SolveData(recurseCount: 0, currentPuzzle: self, possibleValuesMatrix: self.possibleValueMatrix, solveLog: []))
-        
-       // print(solvedData.currentPuzzle.description)
-        return solvedData
+//    internal func rate() throws -> SolveData{
+//        
+//        let solvedData = try _rate(solveData: SolveData(recurseCount: 0, currentPuzzle: self, possibleValuesMatrix: self.possibleValueMatrix, solveLog: []))
+//        
+//       // print(solvedData.currentPuzzle.description)
+//        return solvedData
+//    }
+    public func rate() throws -> DificultyRating{
+        return try internalRate().3
     }
-    public func _rate() throws -> DificultyRating{
+    internal func internalRate() throws -> (Int,Int,SolveData,DificultyRating){
         
         let solvedData = try _rate(solveData: SolveData(recurseCount: 0, currentPuzzle: self, possibleValuesMatrix: self.possibleValueMatrix, solveLog: []))
         
-        print(solvedData.currentPuzzle.description)
-        return .medium
+        let solved = try self.solvedCopy()
+      
+        
+        /*
+         Naked single 100
+         HiddenSingle 200
+         Naked Pair 200
+         Hidden Pair 300
+         Naked Triple 400
+         Hidden Triple 400
+         Naked Quad 500
+         Hidden Quad 600
+         Locked Candidate 300
+         X Wing 800
+         
+         */
+        var score = 0
+        for hint in solvedData.solveLog{
+            
+            switch hint{
+            case .answers(let answers):
+                switch answers.type{
+                case .hiddenSingle:
+                    score += 200
+                    break
+                case .nakedSingle:
+                    score += 100
+                    break
+                default:
+                    break
+                }
+                break
+            case .possibles(let possibles):
+                switch possibles.type {
+                case .hiddenSet:
+                    score += 200 * (possibles.indices.count)
+                    break
+                case .nakedSet:
+                    score += 150 * (possibles.indices.count)
+                    break
+                case .lockedCandidate:
+                    score += 300
+                    break
+                case .xWing:
+                    score += 800
+                    break
+                default:
+                    break
+                }
+                break
+            }
+        }
+        var rating : DificultyRating = .hard
+        if(solvedData.currentPuzzle.data != solved.data){
+            score += 10000
+        }
+        switch score{
+        case 0..<2200:
+            rating = .easy
+            break
+        case 2200..<2901:
+            rating = .medium
+            break
+        case 2901..<10000:
+            rating = .hard
+            break
+        case 10001..<21900:
+            rating = .extraHard
+            break
+        default:
+            rating = .extraHard
+            break
+            //return.extraHard
+        }
+        return (solvedData.solveLog.count, score,solvedData,rating)
     }
     
     private static var allHouses : [House] = {
