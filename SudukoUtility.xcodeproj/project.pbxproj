@@ -3,10 +3,15 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 50;
+	objectVersion = 52;
 	objects = {
 
 /* Begin PBXBuildFile section */
+		48434971255C0E40002E7703 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48434970255C0E40002E7703 /* main.swift */; };
+		484349B1255C81AC002E7703 /* SudukoUtility.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 48A5A6FE248D0BF600011FFC /* SudukoUtility.framework */; };
+		484349B2255C81AC002E7703 /* SudukoUtility.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 48A5A6FE248D0BF600011FFC /* SudukoUtility.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		484349C2255C85B5002E7703 /* ArgumentParser in Frameworks */ = {isa = PBXBuildFile; productRef = 484349C1255C85B5002E7703 /* ArgumentParser */; };
+		484349C7255D5AEC002E7703 /* SQLite in Frameworks */ = {isa = PBXBuildFile; productRef = 484349C6255D5AEC002E7703 /* SQLite */; };
 		4851E9F924C4AE13006786DE /* SudokuTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4851E9F824C4AE13006786DE /* SudokuTests.swift */; };
 		4851E9FB24C4AEFE006786DE /* Sudoku.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4851E9FA24C4AEFE006786DE /* Sudoku.swift */; };
 		489D3D0A252F2D9900670FAA /* Grader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 489D3D09252F2D9900670FAA /* Grader.swift */; };
@@ -18,6 +23,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		484349B3255C81AC002E7703 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 48A5A6F5248D0BF600011FFC /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 48A5A6FD248D0BF600011FFC;
+			remoteInfo = SudukoUtility;
+		};
 		48A5A709248D0BF600011FFC /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 48A5A6F5248D0BF600011FFC /* Project object */;
@@ -27,7 +39,32 @@
 		};
 /* End PBXContainerItemProxy section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		4843496C255C0E40002E7703 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+		484349B5255C81AC002E7703 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				484349B2255C81AC002E7703 /* SudukoUtility.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		4843496E255C0E40002E7703 /* SudokuMaker */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = SudokuMaker; sourceTree = BUILT_PRODUCTS_DIR; };
+		48434970255C0E40002E7703 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		4851E9F824C4AE13006786DE /* SudokuTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SudokuTests.swift; sourceTree = "<group>"; };
 		4851E9FA24C4AEFE006786DE /* Sudoku.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sudoku.swift; sourceTree = "<group>"; };
 		489D3D09252F2D9900670FAA /* Grader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Grader.swift; sourceTree = "<group>"; };
@@ -42,6 +79,16 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		4843496B255C0E40002E7703 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				484349C7255D5AEC002E7703 /* SQLite in Frameworks */,
+				484349C2255C85B5002E7703 /* ArgumentParser in Frameworks */,
+				484349B1255C81AC002E7703 /* SudukoUtility.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		48A5A6FB248D0BF600011FFC /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -60,12 +107,29 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		4843496F255C0E40002E7703 /* SudokuMaker */ = {
+			isa = PBXGroup;
+			children = (
+				48434970255C0E40002E7703 /* main.swift */,
+			);
+			path = SudokuMaker;
+			sourceTree = "<group>";
+		};
+		48434978255C0EDE002E7703 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		48A5A6F4248D0BF600011FFC = {
 			isa = PBXGroup;
 			children = (
 				48A5A700248D0BF600011FFC /* SudukoUtility */,
 				48A5A70B248D0BF600011FFC /* SudukoUtilityTests */,
+				4843496F255C0E40002E7703 /* SudokuMaker */,
 				48A5A6FF248D0BF600011FFC /* Products */,
+				48434978255C0EDE002E7703 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -74,6 +138,7 @@
 			children = (
 				48A5A6FE248D0BF600011FFC /* SudukoUtility.framework */,
 				48A5A707248D0BF600011FFC /* SudukoUtilityTests.xctest */,
+				4843496E255C0E40002E7703 /* SudokuMaker */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -115,6 +180,29 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
+		4843496D255C0E40002E7703 /* SudokuMaker */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 48434974255C0E40002E7703 /* Build configuration list for PBXNativeTarget "SudokuMaker" */;
+			buildPhases = (
+				4843496A255C0E40002E7703 /* Sources */,
+				4843496B255C0E40002E7703 /* Frameworks */,
+				4843496C255C0E40002E7703 /* CopyFiles */,
+				484349B5255C81AC002E7703 /* Embed Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				484349B4255C81AC002E7703 /* PBXTargetDependency */,
+			);
+			name = SudokuMaker;
+			packageProductDependencies = (
+				484349C1255C85B5002E7703 /* ArgumentParser */,
+				484349C6255D5AEC002E7703 /* SQLite */,
+			);
+			productName = SudokuMaker;
+			productReference = 4843496E255C0E40002E7703 /* SudokuMaker */;
+			productType = "com.apple.product-type.tool";
+		};
 		48A5A6FD248D0BF600011FFC /* SudukoUtility */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 48A5A712248D0BF600011FFC /* Build configuration list for PBXNativeTarget "SudukoUtility" */;
@@ -157,10 +245,13 @@
 		48A5A6F5248D0BF600011FFC /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastSwiftUpdateCheck = 1150;
+				LastSwiftUpdateCheck = 1210;
 				LastUpgradeCheck = 1200;
 				ORGANIZATIONNAME = Tassinari;
 				TargetAttributes = {
+					4843496D255C0E40002E7703 = {
+						CreatedOnToolsVersion = 12.1;
+					};
 					48A5A6FD248D0BF600011FFC = {
 						CreatedOnToolsVersion = 11.5;
 						LastSwiftMigration = 1150;
@@ -179,12 +270,17 @@
 				Base,
 			);
 			mainGroup = 48A5A6F4248D0BF600011FFC;
+			packageReferences = (
+				484349C0255C85B5002E7703 /* XCRemoteSwiftPackageReference "swift-argument-parser" */,
+				484349C5255D5AEB002E7703 /* XCRemoteSwiftPackageReference "SQLite.swift" */,
+			);
 			productRefGroup = 48A5A6FF248D0BF600011FFC /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
 				48A5A6FD248D0BF600011FFC /* SudukoUtility */,
 				48A5A706248D0BF600011FFC /* SudukoUtilityTests */,
+				4843496D255C0E40002E7703 /* SudokuMaker */,
 			);
 		};
 /* End PBXProject section */
@@ -207,6 +303,14 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		4843496A255C0E40002E7703 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				48434971255C0E40002E7703 /* main.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		48A5A6FA248D0BF600011FFC /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -230,6 +334,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		484349B4255C81AC002E7703 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 48A5A6FD248D0BF600011FFC /* SudukoUtility */;
+			targetProxy = 484349B3255C81AC002E7703 /* PBXContainerItemProxy */;
+		};
 		48A5A70A248D0BF600011FFC /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 48A5A6FD248D0BF600011FFC /* SudukoUtility */;
@@ -238,6 +347,34 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		48434972255C0E40002E7703 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = N2Z455V6H8;
+				ENABLE_HARDENED_RUNTIME = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = org.tassinari.SudukoUtility;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SUPPORTED_PLATFORMS = macosx;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		48434973255C0E40002E7703 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = N2Z455V6H8;
+				ENABLE_HARDENED_RUNTIME = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = org.tassinari.SudukoUtility;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SUPPORTED_PLATFORMS = macosx;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
 		48A5A710248D0BF600011FFC /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -295,7 +432,8 @@
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
-				SDKROOT = macosx;
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos macosx";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				VERSIONING_SYSTEM = "apple-generic";
@@ -353,7 +491,8 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
-				SDKROOT = macosx;
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos macosx";
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				VERSIONING_SYSTEM = "apple-generic";
@@ -366,7 +505,7 @@
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "";
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEFINES_MODULE = YES;
@@ -383,7 +522,6 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = org.tassinari.SudukoUtility;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
-				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
@@ -395,7 +533,7 @@
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "";
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEFINES_MODULE = YES;
@@ -412,7 +550,6 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = org.tassinari.SudukoUtility;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
-				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
 				SWIFT_VERSION = 5.0;
 			};
@@ -463,6 +600,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		48434974255C0E40002E7703 /* Build configuration list for PBXNativeTarget "SudokuMaker" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				48434972255C0E40002E7703 /* Debug */,
+				48434973255C0E40002E7703 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		48A5A6F8248D0BF600011FFC /* Build configuration list for PBXProject "SudukoUtility" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -491,6 +637,38 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		484349C0255C85B5002E7703 /* XCRemoteSwiftPackageReference "swift-argument-parser" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-argument-parser";
+			requirement = {
+				kind = upToNextMinorVersion;
+				minimumVersion = 0.3.1;
+			};
+		};
+		484349C5255D5AEB002E7703 /* XCRemoteSwiftPackageReference "SQLite.swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/stephencelis/SQLite.swift.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.12.2;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		484349C1255C85B5002E7703 /* ArgumentParser */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 484349C0255C85B5002E7703 /* XCRemoteSwiftPackageReference "swift-argument-parser" */;
+			productName = ArgumentParser;
+		};
+		484349C6255D5AEC002E7703 /* SQLite */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 484349C5255D5AEB002E7703 /* XCRemoteSwiftPackageReference "SQLite.swift" */;
+			productName = SQLite;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 48A5A6F5248D0BF600011FFC /* Project object */;
 }
