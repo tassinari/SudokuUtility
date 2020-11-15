@@ -7,11 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		481FCC4B255F3CF900E7CEB6 /* Puzzle.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 481FCC49255F3CF900E7CEB6 /* Puzzle.xcdatamodeld */; };
+		481FCC6B25614E1300E7CEB6 /* ArgumentParser in Frameworks */ = {isa = PBXBuildFile; productRef = 481FCC6A25614E1300E7CEB6 /* ArgumentParser */; };
 		48434971255C0E40002E7703 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48434970255C0E40002E7703 /* main.swift */; };
 		484349B1255C81AC002E7703 /* SudukoUtility.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 48A5A6FE248D0BF600011FFC /* SudukoUtility.framework */; };
 		484349B2255C81AC002E7703 /* SudukoUtility.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 48A5A6FE248D0BF600011FFC /* SudukoUtility.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		484349C2255C85B5002E7703 /* ArgumentParser in Frameworks */ = {isa = PBXBuildFile; productRef = 484349C1255C85B5002E7703 /* ArgumentParser */; };
-		484349C7255D5AEC002E7703 /* SQLite in Frameworks */ = {isa = PBXBuildFile; productRef = 484349C6255D5AEC002E7703 /* SQLite */; };
 		4851E9F924C4AE13006786DE /* SudokuTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4851E9F824C4AE13006786DE /* SudokuTests.swift */; };
 		4851E9FB24C4AEFE006786DE /* Sudoku.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4851E9FA24C4AEFE006786DE /* Sudoku.swift */; };
 		489D3D0A252F2D9900670FAA /* Grader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 489D3D09252F2D9900670FAA /* Grader.swift */; };
@@ -63,6 +63,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		481FCC4A255F3CF900E7CEB6 /* Puzzle.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = Puzzle.xcdatamodel; sourceTree = "<group>"; };
 		4843496E255C0E40002E7703 /* SudokuMaker */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = SudokuMaker; sourceTree = BUILT_PRODUCTS_DIR; };
 		48434970255C0E40002E7703 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		4851E9F824C4AE13006786DE /* SudokuTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SudokuTests.swift; sourceTree = "<group>"; };
@@ -83,8 +84,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				484349C7255D5AEC002E7703 /* SQLite in Frameworks */,
-				484349C2255C85B5002E7703 /* ArgumentParser in Frameworks */,
+				481FCC6B25614E1300E7CEB6 /* ArgumentParser in Frameworks */,
 				484349B1255C81AC002E7703 /* SudukoUtility.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -111,6 +111,7 @@
 			isa = PBXGroup;
 			children = (
 				48434970255C0E40002E7703 /* main.swift */,
+				481FCC49255F3CF900E7CEB6 /* Puzzle.xcdatamodeld */,
 			);
 			path = SudokuMaker;
 			sourceTree = "<group>";
@@ -196,8 +197,7 @@
 			);
 			name = SudokuMaker;
 			packageProductDependencies = (
-				484349C1255C85B5002E7703 /* ArgumentParser */,
-				484349C6255D5AEC002E7703 /* SQLite */,
+				481FCC6A25614E1300E7CEB6 /* ArgumentParser */,
 			);
 			productName = SudokuMaker;
 			productReference = 4843496E255C0E40002E7703 /* SudokuMaker */;
@@ -271,8 +271,7 @@
 			);
 			mainGroup = 48A5A6F4248D0BF600011FFC;
 			packageReferences = (
-				484349C0255C85B5002E7703 /* XCRemoteSwiftPackageReference "swift-argument-parser" */,
-				484349C5255D5AEB002E7703 /* XCRemoteSwiftPackageReference "SQLite.swift" */,
+				481FCC6925614E1300E7CEB6 /* XCRemoteSwiftPackageReference "swift-argument-parser" */,
 			);
 			productRefGroup = 48A5A6FF248D0BF600011FFC /* Products */;
 			projectDirPath = "";
@@ -308,6 +307,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				48434971255C0E40002E7703 /* main.swift in Sources */,
+				481FCC4B255F3CF900E7CEB6 /* Puzzle.xcdatamodeld in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -639,7 +639,7 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		484349C0255C85B5002E7703 /* XCRemoteSwiftPackageReference "swift-argument-parser" */ = {
+		481FCC6925614E1300E7CEB6 /* XCRemoteSwiftPackageReference "swift-argument-parser" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/apple/swift-argument-parser";
 			requirement = {
@@ -647,28 +647,28 @@
 				minimumVersion = 0.3.1;
 			};
 		};
-		484349C5255D5AEB002E7703 /* XCRemoteSwiftPackageReference "SQLite.swift" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/stephencelis/SQLite.swift.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 0.12.2;
-			};
-		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		484349C1255C85B5002E7703 /* ArgumentParser */ = {
+		481FCC6A25614E1300E7CEB6 /* ArgumentParser */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 484349C0255C85B5002E7703 /* XCRemoteSwiftPackageReference "swift-argument-parser" */;
+			package = 481FCC6925614E1300E7CEB6 /* XCRemoteSwiftPackageReference "swift-argument-parser" */;
 			productName = ArgumentParser;
 		};
-		484349C6255D5AEC002E7703 /* SQLite */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 484349C5255D5AEB002E7703 /* XCRemoteSwiftPackageReference "SQLite.swift" */;
-			productName = SQLite;
-		};
 /* End XCSwiftPackageProductDependency section */
+
+/* Begin XCVersionGroup section */
+		481FCC49255F3CF900E7CEB6 /* Puzzle.xcdatamodeld */ = {
+			isa = XCVersionGroup;
+			children = (
+				481FCC4A255F3CF900E7CEB6 /* Puzzle.xcdatamodel */,
+			);
+			currentVersion = 481FCC4A255F3CF900E7CEB6 /* Puzzle.xcdatamodel */;
+			path = Puzzle.xcdatamodeld;
+			sourceTree = "<group>";
+			versionGroupType = wrapper.xcdatamodel;
+		};
+/* End XCVersionGroup section */
 	};
 	rootObject = 48A5A6F5248D0BF600011FFC /* Project object */;
 }
