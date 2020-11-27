@@ -67,6 +67,13 @@ public struct SudokuPuzzle{
         self.size = 9
         
     }
+    public func originalPuzzle() -> SudokuPuzzle{
+        var  newData : [Int] = Array(repeating: 0, count: 81)
+        for (i,v) in self.data.enumerated(){
+            newData[i] = self.givens.contains(i) ? v : 0
+        }
+        return SudokuPuzzle(data: newData)
+    }
 }
 
 //MARK: Solving utilties

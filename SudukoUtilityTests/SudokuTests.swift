@@ -399,5 +399,39 @@ class SudokuTests: XCTestCase {
         
         
     }
+    
+    func testOriginalPuzzleWorks(){
+        do {
+            let puzzle = try SudokuPuzzle.creatPuzzle()
+            print("==========")
+            print(puzzle.description)
+            print("==========")
+            XCTAssert(try puzzle.uniquelySolvable())
+            
+            //fill puzzle with random data
+            var fullPuzzle = SudokuPuzzle(data: puzzle.data)
+            let newPuzzleData = puzzle.data.map({ (x) -> Int in
+                var n = x
+                if(n == 0){
+                    n = 1
+                }
+                return n
+            })
+            //change newPuzzle data manually, cannot call in it with data, because that determines the givens
+            fullPuzzle.data = newPuzzleData
+            print("========== full puzzle")
+            print(fullPuzzle.description)
+            print("==========")
+            print("========== orginal puzzle")
+            print(fullPuzzle.originalPuzzle().description)
+            print("==========")
+            XCTAssert(fullPuzzle.originalPuzzle().data == puzzle.data)
+            
+            
+            
+        } catch let e {
+            XCTFail(e.localizedDescription)
+        }
+    }
    
 }
