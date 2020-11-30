@@ -360,6 +360,19 @@ class SudokuTests: XCTestCase {
         XCTAssert(actualGivens == newPuzzle.givens)
         XCTAssert(newPuzzle.data == puzzle.data)
     }
+    func testEncodeDecodeWorksOnLast(){
+        let data = [ 6 , 8 , 9 , 4 , 1 , 7 , 3 , 2 , 5 , 1 , 4 , 7 , 3 , 5 , 2 , 6 , 9 , 8 , 3 , 5 , 2 , 9 , 8 , 6 , 4 , 7 , 1 , 8 , 3 , 1 , 5 , 2 , 4 , 9 , 6 , 7 , 2 , 7 , 5 , 6 , 9 , 3 , 1 , 8 , 4 , 9 , 6 , 4 , 8 , 7 , 1 , 2 , 5 , 3 , 4 , 1 , 8 , 2 , 6 , 5 , 7 , 3 , 9 , 5 , 2 , 3 , 7 , 4 , 9 , 8 , 1 , 6 , 7 , 9 , 6 , 1 , 3 , 8 , 5 , 4 , 2 ]
+        let puzzle = SudokuPuzzle(data: data)
+        let newPuzzle = SudokuPuzzle.from(hash: puzzle.hashed)
+        var actualGivens : [Int] =  []
+        for (i,v) in data.enumerated(){
+            if(v > 0){
+                actualGivens.append(i)
+            }
+        }
+        XCTAssert(actualGivens == newPuzzle.givens)
+        XCTAssert(newPuzzle.data == puzzle.data)
+    }
     func testEncodeDecode64Works(){
         let data = [
           2 , 0 , 9 , 0 , 5 , 7 , 0 , 0 , 0 ,

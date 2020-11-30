@@ -381,17 +381,17 @@ class GradingTests: XCTestCase {
             print("\(t.0.data.filter({$0 > 0}).count),\(t.1),\(t.2),\(t.3 ? 1 : 0),\(t.4)")
         }
     }
-    func testRate(){
-        do {
-            for _ in 0..<300{
-                let puzzle = try SudokuPuzzle.creatPuzzle()
-                let rated = try puzzle.rate()
-                print(rated)
-        }
-        } catch let e {
-            XCTFail(e.localizedDescription)
-        }
-    }
+//    func testRate(){
+//        do {
+//            for _ in 0..<300{
+//                let puzzle = try SudokuPuzzle.creatPuzzle()
+//                let rated = try puzzle.rate()
+//                print(rated)
+//        }
+//        } catch let e {
+//            XCTFail(e.localizedDescription)
+//        }
+//    }
     
     func testHiddenSetsThatProduce(){
         let puzzles = [

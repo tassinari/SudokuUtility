@@ -527,8 +527,12 @@ extension SudokuPuzzle {
             bits = bits | (UInt8(value) & 0xf)
             buffer = buffer | UInt64(bits)
             byteCount += 1
-            var offset = 32
+            var offset = 32  // 32 because we push 40 bytes in (40-32 = 8), then decrement the offset
             if byteCount == 8 || i == 80{
+                //on case i=80, it hasnt been pushed a full 40 bits left, the value is sitting in the 0xFF position, so zero out the offset
+                if(i == 80){
+                    offset = 0
+                }
                 //empty the buffer into the hashed Data
                 for _ in 1...5{
                     let chunk = UInt8((buffer >> offset ) & SudokuPuzzle.lowEndMask )
@@ -549,7 +553,13 @@ extension SudokuPuzzle {
         for i in 0..<81{
             let bitIndex = i * 5
             let byteIndex = bitIndex / 8
-            let bitOffset = bitIndex % 8
+            var bitOffset = bitIndex % 8
+            
+            //fix for last one, not sure why this works yet.  Look into it
+            if(i == 80){
+                bitOffset = 3
+            }
+            
             if(byteIndex >= hash.count - 1) {
                 break
             }
@@ -580,6 +590,8 @@ extension SudokuPuzzle {
         var arr = Array<UInt8>(repeating: 0, count: data.count/MemoryLayout<UInt8>.stride)
         _ = arr.withUnsafeMutableBytes { data.copyBytes(to: $0) }
         var puzzle = SudokuPuzzle(data: arr.map{Int($0)})
+        
+        //the given data may be different from the saved data, ie a person may hvae entered a few answers, so use the given flag data, not the data fed o SudokuPuzze(data:[Int])
         puzzle._givens = givens
         return puzzle
     }
