@@ -343,7 +343,7 @@ class GradingTests: XCTestCase {
     func testRateScore(){
         var data : [(SudokuPuzzle,Int,Int,Bool,String)] = []
         do {
-            for _ in 0..<400{
+            for _ in 0..<20{
                 let puzzle = try SudokuPuzzle.creatPuzzle()
                 let rated = try puzzle.internalRate()
                 let solved = try puzzle.solvedCopy()

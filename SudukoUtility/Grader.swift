@@ -12,10 +12,10 @@ import Foundation
 //MARK: Grader
 
 
-enum HintType : CustomStringConvertible{
+public enum HintType : CustomStringConvertible{
     case nakedSingle,lockedCandidate,hiddenSingle,nakedSet,hiddenSet,xWing,swordfish
     
-    var description : String {
+    public var description : String {
         switch self {
         
         case .nakedSingle: return "Naked single"
@@ -31,40 +31,46 @@ enum HintType : CustomStringConvertible{
 }
 public typealias Possibles = [Int : [Int]]
 
-protocol HintResultProtocol {
+public protocol HintResultProtocol {
     var type : HintType { get }
 }
-enum HintResult {
+public enum HintResult {
     case answers(AnswerHint)
     case possibles(PossiblesHint)
 }
-struct PossiblesHint : HintResultProtocol, Hashable, Equatable{
-    var type: HintType
+public struct PossiblesHint : HintResultProtocol, Hashable, Equatable{
+    public var type: HintType
     let indices : Set<Int>
     let values : Set<Int>
     let house : House
-    static func == (lhs: Self, rhs: Self) -> Bool{
+    public static func == (lhs: Self, rhs: Self) -> Bool{
         return lhs.type == rhs.type && rhs.indices == lhs.indices && rhs.values == lhs.values && rhs.house == lhs.house
     }
 }
-struct AnswerHint : HintResultProtocol{
-    var type: HintType
-    let answers : [Int: Int]
+public enum AnswerDataType {
+    case house (House)
+    case index (Int)
+    
+    public var wrappedHouse : House? {
+        switch self {
+        case .house(let h):
+            return h
+        case .index:
+            return nil
+        }
+    }
+}
+public struct AnswerData{
+    public let value : Int
+    public let dataType : AnswerDataType
+}
+public struct AnswerHint : HintResultProtocol{
+    
+    public var type: HintType
+    public let answers : [Int: AnswerData]
  
 }
-enum HouseType : CaseIterable{
-    case row,column,group
-}
-struct House : Hashable, Equatable{
-    let type : HouseType
-    let houseIndex : Int
-    let memberIndices : [Int]
-    
-    static func == (lhs: Self, rhs: Self) -> Bool{
-        return lhs.type == rhs.type && rhs.houseIndex == lhs.houseIndex && rhs.memberIndices == lhs.memberIndices
-    }
-    
-}
+
 
 extension SudokuPuzzle{
     private static let allOptions  =  Set<Int>(Array(1...9))
@@ -87,8 +93,8 @@ extension SudokuPuzzle{
         let nakedSingles = solveData.currentPuzzle.nakedSingles(possibles: solveData.possibleValuesMatrix)
         if(nakedSingles.answers.count > 0){
             for key in nakedSingles.answers.keys{
-                guard let value = nakedSingles.answers[key] else {continue}
-                puzzle.data[key] = value
+                guard let answerData = nakedSingles.answers[key] else {continue}
+                puzzle.data[key] = answerData.value
             }
             var pastResult = solveData.solveLog
             pastResult.append(HintResult.answers(nakedSingles))
@@ -99,8 +105,8 @@ extension SudokuPuzzle{
         let hiddenSingles = solveData.currentPuzzle.hiddenSingles(possibles: solveData.possibleValuesMatrix)
         if(hiddenSingles.answers.count > 0){
             for key in hiddenSingles.answers.keys{
-                guard let value = hiddenSingles.answers[key] else {continue}
-                puzzle.data[key] = value
+                guard let answerData = hiddenSingles.answers[key] else {continue}
+                puzzle.data[key] = answerData.value
             }
             var pastResult = solveData.solveLog
             pastResult.append(HintResult.answers(hiddenSingles))
@@ -175,6 +181,43 @@ extension SudokuPuzzle{
         
         
         return solveData
+    }
+    
+    //FIXME: Combine with the _rate function to extract out the hint result
+    public func hint() -> HintResult{
+        //naked singles
+        let nakedSingles = self.nakedSingles(possibles: self.possibleValueMatrix)
+        if nakedSingles.answers.count > 0 {
+            return HintResult.answers(nakedSingles)
+        }
+        //hidden singles
+        let hiddenSingles = self.hiddenSingles(possibles: self.possibleValueMatrix)
+        if hiddenSingles.answers.count > 0 {
+            return HintResult.answers(hiddenSingles)
+        }
+        //hidden set
+        let hiddednsets = self.hiddenSets(possibles: possibleValueMatrix)
+        if hiddednsets.count > 0 {
+            return HintResult.possibles(hiddednsets.first!)
+        }
+           
+       //Naked set
+        let nakedsets = self.nakedSets(possibles: possibleValueMatrix)
+        if nakedsets.count > 0{
+            return HintResult.possibles(nakedsets.first!)
+        }
+       //Locked candidate
+        let locked   = self.lockedCandidate(possibles: possibleValueMatrix)
+        if locked.count > 0{
+            return HintResult.possibles(locked.first!)
+        }
+        //X wing
+        let xwing = self.xwing(possibles: possibleValueMatrix)
+        if xwing.count > 0{
+            return HintResult.possibles(xwing.first!)
+        }
+        
+        return HintResult.answers(nakedSingles)
     }
     private func modifyPossiblesForHidden(possibles : Possibles, hints : [PossiblesHint]) -> Possibles {
         var modifiedPossibles : Possibles = possibles
@@ -302,24 +345,7 @@ extension SudokuPuzzle{
         var houses : [House] = []
         for houseType in HouseType.allCases{
             for i in 0..<9{
-                var indices : [Int] = []
-                switch houseType{
-                case .row:
-                    let startIndex = i * 9
-                    indices = Array<Int>(startIndex..<(startIndex + 9))
-                    break
-                case .column:
-                    let base = Array(0..<9)
-                    indices = base.map{i + ($0 * 9)}
-                    break
-                case .group:
-                    //FIXME: Shitshow of magic numbers
-                    let baseIndices = [0,1,2,9,10,11,18,19,20]  //group 0, use as base
-                    let addBy = [0,3,6,27,30,33,54,57,60]
-                    indices = baseIndices.map{$0 + addBy[i]}
-                    break
-                }
-                houses.append(House(type: houseType, houseIndex: i, memberIndices: indices))
+                houses.append(House(type: houseType, houseIndex: i))
             }
         }
         return houses
@@ -393,20 +419,21 @@ extension SudokuPuzzle{
     
     //Naked Single
     func nakedSingles(possibles : Possibles) -> AnswerHint{
-        let data = possibles.mapValues { (arr) -> Int in
+        let mappedTupples = possibles.map { (key,arr) -> (Int, AnswerData) in
             if arr.count == 1{
-                return arr.first!
+                return (key,AnswerData(value: arr.first!, dataType: AnswerDataType.index(key)))
             }
-            return 0
-        }.filter{ (_,v) -> Bool in
-            return v != 0
+            return (key,AnswerData(value: 0, dataType: AnswerDataType.index(key)))
+        }.filter{ data -> Bool in
+            return data.1.value != 0
         }
-        return AnswerHint(type: .nakedSingle, answers: data)
+        
+        return AnswerHint(type: .nakedSingle, answers: Dictionary(uniqueKeysWithValues: mappedTupples))
     }
    
     //Hidden Single
     func hiddenSingles(possibles : Possibles) -> AnswerHint{
-        var hiddens : [Int : Int] = [:]
+        var hiddens : [Int : AnswerData] = [:]
         for i in possibles.keys{
             guard let values = possibles[i] else{
                 continue
@@ -419,7 +446,7 @@ extension SudokuPuzzle{
                 }.flatMap{$0}
                 let hidden = Set<Int>(values).subtracting(allpossiblesNotIncludingCurrent)
                 if(hidden.count == 1){
-                    hiddens[i] = hidden.first!
+                    hiddens[i] = AnswerData(value: hidden.first!, dataType: AnswerDataType.house(house))
                 }
             }
             
@@ -569,38 +596,5 @@ extension SudokuPuzzle{
 
 
 
-private extension Array {
-    var combinations: [[Element]] {
-        if count == 0 {
-            return [self]
-        }
-        else {
-            let tail = Array(self[1..<endIndex])
-            let head = self[0]
 
-            let first = tail.combinations
-            let rest = first.map { $0 + [head] }
-
-            return first + rest
-        }
-    }
-}
-
-private struct CountedSet<T : Hashable>{
-    
-    var data : Dictionary< T,  Int> = [:]
-    init(withArray : [T]){
-        for item in withArray{
-            if(data[item] != nil ){
-                data[item] = data[item]! + 1
-            }else{
-                data[item] = 1
-            }
-        }
-    }
-    
-    func count(of : T) -> Int{
-        return data[of] ?? 0
-    }
-}
 

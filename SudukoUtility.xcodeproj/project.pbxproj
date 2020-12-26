@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		481FCC4B255F3CF900E7CEB6 /* Puzzle.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 481FCC49255F3CF900E7CEB6 /* Puzzle.xcdatamodeld */; };
 		481FCC6B25614E1300E7CEB6 /* ArgumentParser in Frameworks */ = {isa = PBXBuildFile; productRef = 481FCC6A25614E1300E7CEB6 /* ArgumentParser */; };
+		48414641259362ED0034D7CB /* Utilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48414640259362ED0034D7CB /* Utilities.swift */; };
 		48434971255C0E40002E7703 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48434970255C0E40002E7703 /* main.swift */; };
 		484349B1255C81AC002E7703 /* SudukoUtility.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 48A5A6FE248D0BF600011FFC /* SudukoUtility.framework */; };
 		484349B2255C81AC002E7703 /* SudukoUtility.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 48A5A6FE248D0BF600011FFC /* SudukoUtility.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -64,6 +65,7 @@
 
 /* Begin PBXFileReference section */
 		481FCC4A255F3CF900E7CEB6 /* Puzzle.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = Puzzle.xcdatamodel; sourceTree = "<group>"; };
+		48414640259362ED0034D7CB /* Utilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utilities.swift; sourceTree = "<group>"; };
 		4843496E255C0E40002E7703 /* SudokuMaker */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = SudokuMaker; sourceTree = BUILT_PRODUCTS_DIR; };
 		48434970255C0E40002E7703 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		4851E9F824C4AE13006786DE /* SudokuTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SudokuTests.swift; sourceTree = "<group>"; };
@@ -150,6 +152,7 @@
 				48A5A701248D0BF600011FFC /* SudukoUtility.h */,
 				48A5A718248D0C1100011FFC /* DancingLinks.swift */,
 				4851E9FA24C4AEFE006786DE /* Sudoku.swift */,
+				48414640259362ED0034D7CB /* Utilities.swift */,
 				489D3D09252F2D9900670FAA /* Grader.swift */,
 				48A5A702248D0BF600011FFC /* Info.plist */,
 			);
@@ -317,6 +320,7 @@
 			files = (
 				48A5A719248D0C1100011FFC /* DancingLinks.swift in Sources */,
 				489D3D0A252F2D9900670FAA /* Grader.swift in Sources */,
+				48414641259362ED0034D7CB /* Utilities.swift in Sources */,
 				4851E9FB24C4AEFE006786DE /* Sudoku.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

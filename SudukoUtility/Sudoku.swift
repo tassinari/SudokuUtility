@@ -144,11 +144,11 @@ extension SudokuPuzzle{
         var r : [Int] = []
         let atindexRow = atIndex / size
         let atindexCol = atIndex % size
-        let atindexGroup = groupFromIndex(index: atIndex)
+        let atindexGroup = SudokuPuzzle.groupFrom(index: atIndex)
         for i in 0..<self.data.count{
             let row = i / size
             let col = i % size
-            let group = groupFromIndex(index: i)
+            let group = SudokuPuzzle.groupFrom(index: i)
             let check = self.data[i] != 0 && (atindexRow == row || atindexCol == col || atindexGroup == group)
             if(check){
                 r.append(self.data[i])
@@ -172,7 +172,7 @@ extension SudokuPuzzle{
         for i in 0..<self.data.count{
             let row = i / size
             let col = i % size
-            let group = groupFromIndex(index: i)
+            let group = SudokuPuzzle.groupFrom(index: i)
             rowArray[row].append(self.data[i])
             colArray[col].append(self.data[i])
             groupArray[group].append(self.data[i])
@@ -201,11 +201,11 @@ extension SudokuPuzzle{
         let row = index / size
         let col = index % size
         let value = _data[index]
-        let group = groupFromIndex(index: index)
+        let group = SudokuPuzzle.groupFrom(index: index)
         for constraint in ConstraintType.allCases{
             switch constraint {
             case .cellConstraint:
-                colNums.append(  indexOf(size: size, row: row, column: col))
+                colNums.append(  SudokuPuzzle.indexOf( row: row, column: col))
                 break
             case .rowConstraint:
                 colNums.append( sizeSquared + row * size + value)
@@ -224,7 +224,7 @@ extension SudokuPuzzle{
         var data : [Int] = [Int](repeating: 0, count: 81)
         for rowNumber in rows{
             let all = SudokuPuzzle.rowValues(forRow: rowNumber, size: 9)
-            let indx = indexOf(size: 9, row: all.0, column: all.1)
+            let indx = indexOf( row: all.0, column: all.1)
             data[indx] = all.2 + 1
         }
         return SudokuPuzzle(data: data)
@@ -388,7 +388,7 @@ extension SudokuPuzzle{
                         let b = answers[1]
                         let uniqueRows = Set(a).subtracting(b)
                         let all = SudokuPuzzle.rowValues(forRow: uniqueRows.randomElement()!, size: 9)
-                        let indx = indexOf(size: 9, row: all.0, column: all.1)
+                        let indx = SudokuPuzzle.indexOf(row: all.0, column: all.1)
                         p[indx] = all.2
                         i += 1
                     }
@@ -443,8 +443,8 @@ extension SudokuPuzzle {
                           break
                       case .groupConstaint:
                           //fisrtConstraint is group, second is value
-                          let indx = indexOf(size: 9, row: rowVals.0, column: rowVals.1)
-                          data[i] = (secondColumnConstraint == rowVals.2 && firstColumnConstraint == groupFromIndex(index: indx)) ? 1 : 0
+                          let indx = indexOf( row: rowVals.0, column: rowVals.1)
+                        data[i] = (secondColumnConstraint == rowVals.2 && firstColumnConstraint == groupFrom(index: indx)) ? 1 : 0
                           break
                       }
                       //print("\(i)) R\(rowR)C\(colC)V\(rowValue)")
@@ -473,17 +473,8 @@ extension SudokuPuzzle {
 }
 
 
-//FIXME: this is tied to a 9*9 suduko
-internal func groupFromIndex(index : Int)-> Int{
-    
-    let nChunkIndex = index / 3;
-    let row = nChunkIndex / 9;
-    let column = nChunkIndex % 3;
-    return column + row * 3;
-}
-internal func indexOf(size: Int, row: Int, column : Int) -> Int{
-    return row * size + column
-}
+
+
 
 
 
