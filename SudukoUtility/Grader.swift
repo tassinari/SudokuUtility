@@ -40,11 +40,47 @@ public enum HintResult {
 }
 public struct PossiblesHint : HintResultProtocol, Hashable, Equatable{
     public var type: HintType
-    let indices : Set<Int>
-    let values : Set<Int>
-    let house : House
+    public let indices : Set<Int>
+    public let values : Set<Int>
+    public let house : House
     public static func == (lhs: Self, rhs: Self) -> Bool{
         return lhs.type == rhs.type && rhs.indices == lhs.indices && rhs.values == lhs.values && rhs.house == lhs.house
+    }
+    public var quantityTypeString : String {
+        switch self.indices.count{
+        case 2:
+            return "Double"
+        case 3:
+            return "Triple"
+        case 4:
+            return "Quad"
+        default:
+            return ""
+        }
+    }
+    public var countString : String {
+        switch self.indices.count{
+        case 2:
+            return "two"
+        case 3:
+            return "three"
+        case 4:
+            return "four"
+        default:
+            return ""
+        }
+    }
+    public var enumeratedValueString : String {
+        var str = ""
+        for (i,v) in self.values.enumerated() {
+            if i == self.values.count - 1{
+                str += "\(v)"
+            }else{
+                str += "\(v), "
+            }
+            
+        }
+        return str
     }
 }
 public enum AnswerDataType {
@@ -184,35 +220,37 @@ extension SudokuPuzzle{
     }
     
     //FIXME: Combine with the _rate function to extract out the hint result
-    public func hint() -> HintResult{
+    public func hint(possibles : Possibles) -> HintResult{
+        
         //naked singles
-        let nakedSingles = self.nakedSingles(possibles: self.possibleValueMatrix)
+        let nakedSingles = self.nakedSingles(possibles: possibles)
         if nakedSingles.answers.count > 0 {
             return HintResult.answers(nakedSingles)
         }
         //hidden singles
-        let hiddenSingles = self.hiddenSingles(possibles: self.possibleValueMatrix)
+        let hiddenSingles = self.hiddenSingles(possibles: possibles)
         if hiddenSingles.answers.count > 0 {
             return HintResult.answers(hiddenSingles)
         }
-        //hidden set
-        let hiddednsets = self.hiddenSets(possibles: possibleValueMatrix)
-        if hiddednsets.count > 0 {
-            return HintResult.possibles(hiddednsets.first!)
-        }
            
        //Naked set
-        let nakedsets = self.nakedSets(possibles: possibleValueMatrix)
+        let nakedsets = self.nakedSets(possibles: possibles)
         if nakedsets.count > 0{
             return HintResult.possibles(nakedsets.first!)
         }
+        //hidden set
+        let hiddednsets = self.hiddenSets(possibles: possibles)
+        if hiddednsets.count > 0 {
+            return HintResult.possibles(hiddednsets.first!)
+        }
+        
        //Locked candidate
-        let locked   = self.lockedCandidate(possibles: possibleValueMatrix)
+        let locked   = self.lockedCandidate(possibles: possibles)
         if locked.count > 0{
             return HintResult.possibles(locked.first!)
         }
         //X wing
-        let xwing = self.xwing(possibles: possibleValueMatrix)
+        let xwing = self.xwing(possibles:possibles)
         if xwing.count > 0{
             return HintResult.possibles(xwing.first!)
         }
@@ -400,15 +438,28 @@ extension SudokuPuzzle{
                     return Set(p).isSubset(of: combo)
                 }
                 if possibleNakeds.count == combo.count && possibleNakeds.count != freeSquareCount {
-                    hintResults.insert(PossiblesHint(type: .nakedSet, indices: Set(possibleNakeds),values: combo, house: house))
+                    let otherIndices = house.memberIndices.filter({!possibleNakeds.contains($0)})
+                    let otherPMValues = Set(otherIndices.map { possibles[$0] ?? []}.flatMap{$0})
+                    
+                    if otherPMValues.intersection(combo).count > 0{
+                        hintResults.insert(PossiblesHint(type: .nakedSet, indices: Set(possibleNakeds),values: combo, house: house))
+                    }
+                    
                 }
                 
             case .hiddenSet:
                 //hidden sets
                 let possibleHiddens = house.memberIndices.filter{!combo.isDisjoint(with: Set(possibles[$0] ?? []))}
                 if possibleHiddens.count == combo.count && possibleHiddens.count != freeSquareCount {
-                    hintResults.insert(PossiblesHint(type: .hiddenSet, indices: Set(possibleHiddens),values: combo, house: house))
+                    //Check if truly hidden, ie at least 1 extra value must be present in set
+                    var trulyHidden = true
+                    let allPossiblesValuesInCombosIndices = Set(possibleHiddens.map{possibles[$0] ?? []}.flatMap{$0})
+                    trulyHidden = combo.isStrictSubset(of: allPossiblesValuesInCombosIndices )
+                    if(trulyHidden){
+                        hintResults.insert(PossiblesHint(type: .hiddenSet, indices: Set(possibleHiddens),values: combo, house: house))
+                    }
                 }
+                   
             default:
                 break
             }
