@@ -62,7 +62,19 @@ extension SudokuPuzzle{
 public enum HouseType : CaseIterable{
     case row,column,group
 }
-public struct House : Hashable, Equatable{
+public struct House : Hashable, Equatable, CustomStringConvertible{
+    public var description: String {
+        switch self.type{
+        
+        case .row:
+            return "row"
+        case .column:
+            return "column"
+        case .group:
+            return "group"
+        }
+    }
+    
     public let type : HouseType
     public let houseIndex : Int
     public var memberIndices : [Int] {

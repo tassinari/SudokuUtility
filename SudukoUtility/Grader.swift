@@ -22,8 +22,8 @@ public enum HintType : CustomStringConvertible{
         case .hiddenSingle: return "Hidden single"
         case .nakedSet: return "Naked set"
         case .hiddenSet: return "Hidden set"
-        case .xWing: return "x wing"
-        case .swordfish: return "swordfish"
+        case .xWing: return "X Wing"
+        case .swordfish: return "Swordfish"
         case .lockedCandidate: return "Locked Candidate"
        
         }
@@ -34,56 +34,20 @@ public typealias Possibles = [Int : [Int]]
 public protocol HintResultProtocol {
     var type : HintType { get }
 }
-public enum HintResult {
-    case answers(AnswerHint)
-    case possibles(PossiblesHint)
+
+
+public struct PossibleHighlights : Equatable, Hashable{
+    public let index : Int
+    public let positiveHighlights : [Int]
+    public let negativeHighlights : [Int]
+    
+    public static func == (lhs: PossibleHighlights, rhs: PossibleHighlights) -> Bool {
+        return lhs.index == rhs.index && Set(lhs.positiveHighlights) == Set(rhs.positiveHighlights) && Set(lhs.negativeHighlights) == Set(rhs.negativeHighlights)
+    }
+    
+    
 }
-public struct PossiblesHint : HintResultProtocol, Hashable, Equatable{
-    public var type: HintType
-    public let indices : Set<Int>
-    public let values : Set<Int>
-    public let house : House
-    public static func == (lhs: Self, rhs: Self) -> Bool{
-        return lhs.type == rhs.type && rhs.indices == lhs.indices && rhs.values == lhs.values && rhs.house == lhs.house
-    }
-    public var quantityTypeString : String {
-        switch self.indices.count{
-        case 2:
-            return "Double"
-        case 3:
-            return "Triple"
-        case 4:
-            return "Quad"
-        default:
-            return ""
-        }
-    }
-    public var countString : String {
-        switch self.indices.count{
-        case 2:
-            return "two"
-        case 3:
-            return "three"
-        case 4:
-            return "four"
-        default:
-            return ""
-        }
-    }
-    public var enumeratedValueString : String {
-        var str = ""
-        for (i,v) in self.values.enumerated() {
-            if i == self.values.count - 1{
-                str += "\(v)"
-            }else{
-                str += "\(v), "
-            }
-            
-        }
-        return str
-    }
-}
-public enum AnswerDataType {
+public enum HighlightType  : Equatable, Hashable{
     case house (House)
     case index (Int)
     
@@ -95,16 +59,161 @@ public enum AnswerDataType {
             return nil
         }
     }
+    public var wrappedIndex : Int? {
+        switch self {
+        case .house:
+            return nil
+        case .index(let i):
+            return i
+        }
+    }
 }
-public struct AnswerData{
+public struct HintAnswer : Equatable, Hashable{
+    public let index : Int
     public let value : Int
-    public let dataType : AnswerDataType
 }
-public struct AnswerHint : HintResultProtocol{
+public struct Hint : HintResultProtocol, Equatable, Hashable{
+    public static func == (lhs: Hint, rhs: Hint) -> Bool {
+        return lhs.answer == rhs.answer && rhs.type == lhs.type && rhs.highlights == lhs.highlights && rhs.possiblesHighlights == lhs.possiblesHighlights
+    }
     
     public var type: HintType
-    public let answers : [Int: AnswerData]
- 
+    public let possiblesHighlights : [PossibleHighlights]
+    public let highlights : [HighlightType]
+    public let answer : HintAnswer?
+    
+    public var order : Int {
+        switch type{
+        
+        case .nakedSingle,.lockedCandidate, .hiddenSingle, .xWing:
+            return 1
+        case .nakedSet, .hiddenSet:
+            return  Set(self.possiblesHighlights.map{$0.positiveHighlights}.flatMap { $0 }).count
+        case .swordfish:
+            return 2  //?
+        }
+    }
+    public var orderTypeString : String {
+        switch self.order{
+        case 1:
+            return "Single"
+        case 2:
+            return "Double"
+        case 3:
+            return "Triple"
+        case 4:
+            return "Quad"
+        default :
+            return ""
+        }
+    }
+    public var orderString : String {
+        switch self.order{
+        case 1:
+            return "one"
+        case 2:
+            return "two"
+        case 3:
+            return "three"
+        case 4:
+            return "four"
+        default :
+            return ""
+        }
+    }
+    public var enumeratedPositiveString : String {
+        let p = Set(self.possiblesHighlights.map{$0.positiveHighlights}.flatMap{$0})
+        return self.enumeratedValues(Array(p))
+    }
+    public var enumeratedNegativeString : String {
+        let p = Set(self.possiblesHighlights.map{$0.negativeHighlights}.flatMap{$0})
+        return self.enumeratedValues(Array(p))
+    }
+    private func enumeratedValues(_ arr : [Int]) -> String{
+        var str = ""
+        for (i,v) in arr.enumerated() {
+            str += (i == 0) ? "\(v)" :  ",\(v)"
+        }
+        return str
+    }
+    
+    
+}
+
+//MARK: Debug descriptions
+extension Hint : CustomDebugStringConvertible{
+    public var debugDescription: String {
+        var answer = ""
+        if let an = self.answer{
+            answer = "Answer(index: \(an.index),value: \(an.value))"
+        }else{
+            answer = "nil"
+        }
+        var high = self.highlights.reduce("[") { (str, ht) -> String in
+            if(str.count == 1){
+                return str + ht.debugDescription
+            }
+            return str + ", " + ht.debugDescription
+        }
+        high += "]"
+        var ts = ""
+        switch self.type {
+        case .nakedSingle:
+            ts = ".nakedSingle"
+        case .lockedCandidate:
+            ts = ".lockedCandidate"
+        case .hiddenSingle:
+            ts = ".hiddenSingle"
+        case .nakedSet:
+            ts = ".nakedSet"
+        case .hiddenSet:
+            ts = ".hiddenSet"
+        case .xWing:
+            ts = ".xWing"
+        case .swordfish:
+            ts = ".swordfish"
+        }
+        return "Hint(type: \(ts), possiblesHighlights: \(self.possiblesHighlights.debugDescription), highlights: \(high), answer: \(answer))"
+    }
+    
+    
+}
+
+extension HighlightType : CustomDebugStringConvertible{
+    public var debugDescription: String {
+        switch self{
+        case .house(let h):
+            return "HighlightType.house(\(House(type: h.type, houseIndex: h.houseIndex)))"
+        case .index(let i):
+            return "HighlightType.index(\(i))"
+        }
+    }
+    
+    
+}
+extension PossibleHighlights : CustomDebugStringConvertible{
+    public var debugDescription: String {
+        var pos = self.positiveHighlights.reduce("[") { (str, i) -> String in
+            if self.positiveHighlights.first! == i{
+                return str + String(i)
+            }else{
+                return str + ", " + String(i)
+            }
+            
+        }
+        var neg = self.negativeHighlights.reduce("[") { (str, i) -> String in
+            if self.negativeHighlights.first! == i{
+                return str + String(i)
+            }else{
+                return str + ", " + String(i)
+            }
+        }
+        pos += "]"
+        neg += "]"
+        return "PossibleHighlights(index: \(self.index), positiveHighlights: \(pos), negativeHighlights : \(neg))"
+    }
+    
+   
 }
 
 
@@ -115,7 +224,7 @@ extension SudokuPuzzle{
         let recurseCount : Int
         let currentPuzzle : SudokuPuzzle
         let possibleValuesMatrix : Possibles
-        let solveLog : [HintResult]
+        let solveLog : [Hint]
     }
     internal func _rate(solveData : SolveData) throws -> SolveData{
         if(solveData.currentPuzzle.isSolved()){
@@ -127,49 +236,52 @@ extension SudokuPuzzle{
         var puzzle = solveData.currentPuzzle
         //Stage 1 If any naked singles, add and recurse
         let nakedSingles = solveData.currentPuzzle.nakedSingles(possibles: solveData.possibleValuesMatrix)
-        if(nakedSingles.answers.count > 0){
-            for key in nakedSingles.answers.keys{
-                guard let answerData = nakedSingles.answers[key] else {continue}
-                puzzle.data[key] = answerData.value
+        if(nakedSingles.count > 0){
+            for hint in nakedSingles{
+                if let answer = hint.answer{
+                    puzzle.data[answer.index] = answer.value
+                }
+                
             }
             var pastResult = solveData.solveLog
-            pastResult.append(HintResult.answers(nakedSingles))
-            //print("naked singles - \(nakedSingles.answers.count)")
+            pastResult.append(contentsOf: nakedSingles)
             return try _rate(solveData: SolveData(recurseCount: solveData.recurseCount + 1, currentPuzzle: puzzle,possibleValuesMatrix: puzzle.possibleValueMatrix, solveLog: pastResult))
         }
         //Stage 2 If any hidden singles, add and recurse
+        //FIXME: naked singles and hidden singles logic is almost exactly same, there is a generic opportunity here
         let hiddenSingles = solveData.currentPuzzle.hiddenSingles(possibles: solveData.possibleValuesMatrix)
-        if(hiddenSingles.answers.count > 0){
-            for key in hiddenSingles.answers.keys{
-                guard let answerData = hiddenSingles.answers[key] else {continue}
-                puzzle.data[key] = answerData.value
+        if(hiddenSingles.count > 0){
+            for hint in hiddenSingles{
+                if let answer = hint.answer{
+                    puzzle.data[answer.index] = answer.value
+                }
             }
             var pastResult = solveData.solveLog
-            pastResult.append(HintResult.answers(hiddenSingles))
+            pastResult.append(contentsOf: hiddenSingles)
             //print("hidden singles - \(hiddenSingles.answers.count)")
             return try _rate(solveData: SolveData(recurseCount: solveData.recurseCount + 1, currentPuzzle: puzzle, possibleValuesMatrix: puzzle.possibleValueMatrix, solveLog: pastResult))
         }
         //Stage 3 & 4 & 5 Find any naked/Hidden pairs, triples or quads, xwings and update possible values, recurse
         let types : [HintType] = [.nakedSet,.hiddenSet,.lockedCandidate, .xWing]
         var modifiedPossibles = solveData.possibleValuesMatrix
-        var cumulatedpassedResults : [HintResult] = []
+        var cumulatedpassedResults : [Hint] = []
         var recurse = false
         for type in types{
             
-            var sets : [PossiblesHint] = []
+            var sets : [Hint] = []
             switch type {
             case .hiddenSet:
                 sets = solveData.currentPuzzle.hiddenSets(possibles: solveData.possibleValuesMatrix)
-                modifiedPossibles = self.modifyPossiblesForHidden(possibles: modifiedPossibles, hints: sets)
+                modifiedPossibles = self.modifyPossiblesForHints(possibles: modifiedPossibles, hints: sets)
             case .nakedSet:
                 sets = solveData.currentPuzzle.nakedSets(possibles: solveData.possibleValuesMatrix)
-                modifiedPossibles = self.modifyPossiblesForNaked(possibles: modifiedPossibles, hints: sets)
+                modifiedPossibles = self.modifyPossiblesForHints(possibles: modifiedPossibles, hints: sets)
             case .lockedCandidate:
                 sets = solveData.currentPuzzle.lockedCandidate(possibles: solveData.possibleValuesMatrix)
-                modifiedPossibles = self.modifyPossiblesForNaked(possibles: modifiedPossibles, hints: sets)
+                modifiedPossibles = self.modifyPossiblesForHints(possibles: modifiedPossibles, hints: sets)
             case .xWing:
                 sets = solveData.currentPuzzle.xwing(possibles: solveData.possibleValuesMatrix)
-                modifiedPossibles = self.modifyPossiblesForNaked(possibles: modifiedPossibles, hints: sets)
+                modifiedPossibles = self.modifyPossiblesForHints(possibles: modifiedPossibles, hints: sets)
             default:
                 break
             }
@@ -200,12 +312,12 @@ extension SudokuPuzzle{
                     
                 }
                 // There is a change in possibles so now recurse
-                cumulatedpassedResults.append(contentsOf: sets.map{HintResult.possibles($0)})
+                cumulatedpassedResults.append(contentsOf: sets)
                 recurse = true
                 
             }
             if(modifiedPossibles != solveData.possibleValuesMatrix){
-                cumulatedpassedResults.append(contentsOf: sets.map{HintResult.possibles($0)})
+                cumulatedpassedResults.append(contentsOf: sets)
                 recurse = true
             }
         }
@@ -220,81 +332,56 @@ extension SudokuPuzzle{
     }
     
     //FIXME: Combine with the _rate function to extract out the hint result
-    public func hint(possibles : Possibles) -> HintResult{
+    public func hint(possibles : Possibles) -> Hint?{
         
+       
         //naked singles
         let nakedSingles = self.nakedSingles(possibles: possibles)
-        if nakedSingles.answers.count > 0 {
-            return HintResult.answers(nakedSingles)
+        if nakedSingles.count > 0 {
+            return nakedSingles.first!
         }
         //hidden singles
         let hiddenSingles = self.hiddenSingles(possibles: possibles)
-        if hiddenSingles.answers.count > 0 {
-            return HintResult.answers(hiddenSingles)
+        if hiddenSingles.count > 0 {
+            return hiddenSingles.first!
         }
-           
+        
        //Naked set
         let nakedsets = self.nakedSets(possibles: possibles)
         if nakedsets.count > 0{
-            return HintResult.possibles(nakedsets.first!)
+            return nakedsets.first!
         }
         //hidden set
         let hiddednsets = self.hiddenSets(possibles: possibles)
         if hiddednsets.count > 0 {
-            return HintResult.possibles(hiddednsets.first!)
+            return hiddednsets.first!
         }
         
        //Locked candidate
         let locked   = self.lockedCandidate(possibles: possibles)
         if locked.count > 0{
-            return HintResult.possibles(locked.first!)
+            return locked.first!
         }
         //X wing
         let xwing = self.xwing(possibles:possibles)
         if xwing.count > 0{
-            return HintResult.possibles(xwing.first!)
+            return xwing.first!
         }
         
-        return HintResult.answers(nakedSingles)
+        return nil
     }
-    private func modifyPossiblesForHidden(possibles : Possibles, hints : [PossiblesHint]) -> Possibles {
+    private func modifyPossiblesForHints(possibles : Possibles, hints : [Hint]) -> Possibles {
         var modifiedPossibles : Possibles = possibles
-        for set in hints{
-            
-            //clear out all non values from the indices cells
-            for index in set.indices{
-                guard var possiblesAtIndex = possibles[index] else {continue}
-                possiblesAtIndex.removeAll(where: {!set.values.contains($0)})
-                modifiedPossibles[index] = possiblesAtIndex
-            }
-            //clear out values from non indices cells
-            for index in Set(set.house.memberIndices).subtracting(set.indices){
-                guard var possiblesAtIndex = possibles[index] else {continue}
-                possiblesAtIndex.removeAll(where: {set.values.contains($0)})
-                modifiedPossibles[index] = possiblesAtIndex
+        for hint in hints{
+            for hl in hint.possiblesHighlights{
+                guard var possiblesAtIndex = possibles[hl.index] else {continue}
+                possiblesAtIndex.removeAll(where: {hl.negativeHighlights.contains($0)})
+                modifiedPossibles[hl.index] = possiblesAtIndex
             }
         }
         return modifiedPossibles
     }
-    private func modifyPossiblesForNaked(possibles : Possibles, hints : [PossiblesHint]) -> Possibles{
-        var modifiedPossibles : Possibles = possibles
-        for set in hints{
-            for index in Set(set.house.memberIndices).subtracting(set.indices){
-                guard var possiblesAtIndex = possibles[index] else {continue}
-                possiblesAtIndex.removeAll(where: {set.values.contains($0)})
-                modifiedPossibles[index] = possiblesAtIndex
-            }
-        }
-        return modifiedPossibles
-    }
-    
-//    internal func rate() throws -> SolveData{
-//        
-//        let solvedData = try _rate(solveData: SolveData(recurseCount: 0, currentPuzzle: self, possibleValuesMatrix: self.possibleValueMatrix, solveLog: []))
-//        
-//       // print(solvedData.currentPuzzle.description)
-//        return solvedData
-//    }
+
     public func rate() throws -> DificultyRating{
         return try internalRate().3
     }
@@ -321,37 +408,31 @@ extension SudokuPuzzle{
         var score = 0
         for hint in solvedData.solveLog{
             
-            switch hint{
-            case .answers(let answers):
-                switch answers.type{
-                case .hiddenSingle:
-                    score += 200
-                    break
-                case .nakedSingle:
-                    score += 100
-                    break
-                default:
-                    break
-                }
+            switch hint.type{
+            
+            case .hiddenSingle:
+                score += 200
                 break
-            case .possibles(let possibles):
-                switch possibles.type {
-                case .hiddenSet:
-                    score += 200 * (possibles.indices.count)
-                    break
-                case .nakedSet:
-                    score += 150 * (possibles.indices.count)
-                    break
-                case .lockedCandidate:
-                    score += 300
-                    break
-                case .xWing:
-                    score += 800
-                    break
-                default:
-                    break
-                }
+            case .nakedSingle:
+                score += 100
                 break
+                
+            case .hiddenSet:
+                score += 200 * (hint.possiblesHighlights.first?.positiveHighlights.count ?? 1)
+                break
+            case .nakedSet:
+                score += 150 * (hint.possiblesHighlights.first?.positiveHighlights.count ?? 1)
+                break
+            case .lockedCandidate:
+                score += 300
+                break
+            case .xWing:
+                score += 800
+                break
+            case.swordfish:
+                //FIXME: implement
+                break
+                
             }
         }
         var rating : DificultyRating = .hard
@@ -423,9 +504,9 @@ extension SudokuPuzzle{
     
     
     
-    private func houseCheck( house : House, possibles: Possibles, type : HintType) -> Set<PossiblesHint>{
+    private func houseCheck( house : House, possibles: Possibles, type : HintType) -> Set<Hint>{
         
-        var hintResults : Set<PossiblesHint> = Set()
+        var hintResults : Set<Hint> = Set()
         let freeSquareCount = house.memberIndices.filter{self.data[$0] == 0}.count
         let allPossibleValues = Array(Set(house.memberIndices.map{possibles[$0] ?? []}.flatMap{$0}))
         let combos = allPossibleValues.combinations.filter({$0.count < 5 && $0.count > 1}).map({Set($0)})
@@ -442,7 +523,16 @@ extension SudokuPuzzle{
                     let otherPMValues = Set(otherIndices.map { possibles[$0] ?? []}.flatMap{$0})
                     
                     if otherPMValues.intersection(combo).count > 0{
-                        hintResults.insert(PossiblesHint(type: .nakedSet, indices: Set(possibleNakeds),values: combo, house: house))
+                        var possibleHighlights = possibleNakeds.map{ PossibleHighlights(index: $0, positiveHighlights: Array(combo), negativeHighlights: []) }
+                        let possibleNegatives = otherIndices.filter { (index) -> Bool in
+                            return Set(possibles[index] ?? []).intersection(combo).count > 0
+                        }.map { (index) -> PossibleHighlights in
+                            let negs = Set( possibles[index] ?? []).intersection(combo)
+                            return PossibleHighlights(index: index, positiveHighlights: [], negativeHighlights: Array(negs))
+                        }
+                        possibleHighlights.append(contentsOf: possibleNegatives)
+                        hintResults.insert(Hint(type: .nakedSet, possiblesHighlights: possibleHighlights, highlights: [HighlightType.house(house)], answer: nil))
+                       
                     }
                     
                 }
@@ -456,7 +546,17 @@ extension SudokuPuzzle{
                     let allPossiblesValuesInCombosIndices = Set(possibleHiddens.map{possibles[$0] ?? []}.flatMap{$0})
                     trulyHidden = combo.isStrictSubset(of: allPossiblesValuesInCombosIndices )
                     if(trulyHidden){
-                        hintResults.insert(PossiblesHint(type: .hiddenSet, indices: Set(possibleHiddens),values: combo, house: house))
+                        let possibleHighlights = house.memberIndices.filter{ return Set( possibles[$0] ?? []).intersection(combo).count > 0 }.map { (index) -> PossibleHighlights in
+                            var posHighs : [Int] = []
+                            var negHighs : [Int] = []
+                            if possibleHiddens.contains(index){
+                                posHighs.append(contentsOf: combo)
+                            }else{
+                                negHighs.append(contentsOf: combo)
+                            }
+                            return PossibleHighlights(index: index, positiveHighlights: posHighs, negativeHighlights: negHighs)
+                        }
+                        hintResults.insert(Hint(type: .hiddenSet, possiblesHighlights: possibleHighlights, highlights: [HighlightType.house(house)], answer: nil))
                     }
                 }
                    
@@ -468,23 +568,22 @@ extension SudokuPuzzle{
         return hintResults
     }
     
-    //Naked Single
-    func nakedSingles(possibles : Possibles) -> AnswerHint{
-        let mappedTupples = possibles.map { (key,arr) -> (Int, AnswerData) in
+    //MARK: Naked Single
+    func nakedSingles(possibles : Possibles) -> [Hint]{
+        let singles = possibles.reduce(Array<Hint>()) { (hints, arg1) -> [Hint] in
+            var mutableHints = hints
+            let (key, arr) = arg1
             if arr.count == 1{
-                return (key,AnswerData(value: arr.first!, dataType: AnswerDataType.index(key)))
+                mutableHints.append(Hint(type: .nakedSingle, possiblesHighlights: [], highlights: [HighlightType.index(key)], answer: HintAnswer(index: key, value: arr.first!)))
             }
-            return (key,AnswerData(value: 0, dataType: AnswerDataType.index(key)))
-        }.filter{ data -> Bool in
-            return data.1.value != 0
+            return mutableHints
         }
-        
-        return AnswerHint(type: .nakedSingle, answers: Dictionary(uniqueKeysWithValues: mappedTupples))
+        return singles
     }
    
-    //Hidden Single
-    func hiddenSingles(possibles : Possibles) -> AnswerHint{
-        var hiddens : [Int : AnswerData] = [:]
+    //MARK: Hidden Single
+    func hiddenSingles(possibles : Possibles) -> [Hint]{
+        var hints : [Hint] = []
         for i in possibles.keys{
             guard let values = possibles[i] else{
                 continue
@@ -497,20 +596,18 @@ extension SudokuPuzzle{
                 }.flatMap{$0}
                 let hidden = Set<Int>(values).subtracting(allpossiblesNotIncludingCurrent)
                 if(hidden.count == 1){
-                    hiddens[i] = AnswerData(value: hidden.first!, dataType: AnswerDataType.house(house))
+                    hints.append(Hint(type: .hiddenSingle, possiblesHighlights: [PossibleHighlights(index: i, positiveHighlights: [hidden.first!], negativeHighlights: [])], highlights: [HighlightType.house(house)], answer: HintAnswer(index: i, value: hidden.first!)))
                 }
             }
-            
         }
-        
-        return AnswerHint(type: .hiddenSingle, answers: hiddens)
+        return hints
     }
    
     
-    //locked candidates
-    func lockedCandidate(possibles : Possibles) -> [PossiblesHint]{
+    //MARK: locked candidates
+    func lockedCandidate(possibles : Possibles) -> [Hint]{
         //check single locked
-        var locked : [PossiblesHint] = []
+        var locked : [Hint] = []
         for house in Self.allHouses{
             let countedSet = CountedSet(withArray: house.memberIndices.map{possibles[$0] ?? []}.flatMap{$0})
             for i in 1...9{
@@ -525,7 +622,8 @@ extension SudokuPuzzle{
                     for other in otherHouses{
                         let otherPossibles = Set(other.memberIndices).subtracting(indices).map{possibles[$0] ?? []}.flatMap{$0}
                         if(Set(otherPossibles).contains(i)){
-                            locked.append(PossiblesHint(type: .lockedCandidate, indices: Set(indices), values: Set(arrayLiteral: i), house: other))
+                            locked.append(Hint(type: .lockedCandidate, possiblesHighlights: [], highlights: [HighlightType.house(house),HighlightType.house(other)], answer: nil))
+                            //locked.append(PossiblesHint(type: .lockedCandidate, indices: Set(indices), values: Set(arrayLiteral: i), house: other))
                         }
                         
                     }
@@ -535,18 +633,18 @@ extension SudokuPuzzle{
         return  locked
     }
     
-    //Naked Pairs/triples/quads
+    //MARK: Naked Pairs/triples/quads
     
     //If n squares have n number of the same values its a naked pair,  ie only 2 cells have 3/9 they are a naked pair.  3 & 9 can only be in those two squares
-    func nakedSets(possibles : Possibles) -> [PossiblesHint]{
+    func nakedSets(possibles : Possibles) -> [Hint]{
         //if a square has only n numbers, if another peer square has the same numbers, its a naked pair and can elimintate those number sfrom all other squares
         //FIXME: naked sets and hidden are called and filtered, do in one batch
         return Self.allHouses.map{self.houseCheck(house: $0, possibles: possibles, type: .nakedSet)}.flatMap{$0}.filter{$0.type == .nakedSet}
     }
    
     
-    //Hidden Pairs/triples/quads
-    func hiddenSets(possibles: Possibles) -> [PossiblesHint]{
+    //MARK: Hidden Pairs/triples/quads
+    func hiddenSets(possibles: Possibles) -> [Hint]{
         return Self.allHouses.map{self.houseCheck(house: $0, possibles: possibles, type: .hiddenSet)}.flatMap{$0}.filter{$0.type == .hiddenSet}
 
     }
@@ -556,7 +654,7 @@ extension SudokuPuzzle{
      “When all candidates for a certain digit within N rows lie within N columns, all candidates for this digit in these columns can be removed, except those that lie within the defining rows.”
      */
     
-    // X wing
+    //MARK: X wing
     
     fileprivate struct XWingPossible{
         let house : House
@@ -588,9 +686,9 @@ extension SudokuPuzzle{
         }
     }
 
-    internal func xwing(possibles : Possibles) -> [PossiblesHint]{
+    internal func xwing(possibles : Possibles) -> [Hint]{
         let types : [xWingDirection] = [xWingDirection(direction: .row),xWingDirection(direction: .column)]
-        var resultsHolder : [[PossiblesHint]] = []
+        var resultsHolder : [[Hint]] = []
         
         for xtype in types{
             let rows = Self.allHouses.filter({$0.type == xtype.direction})
@@ -613,7 +711,7 @@ extension SudokuPuzzle{
                 //nothing found
                 return []
             }
-            let myResult = candidates.reduce(Array<PossiblesHint>()) { (xwingResults, possible) -> [PossiblesHint] in
+            let myResult = candidates.reduce(Array<Hint>()) { (xwingResults, possible) -> [Hint] in
                 guard possible.indices.count == 2 else  { return xwingResults}
                 var mutableresults = xwingResults
                 let match = candidates.filter { (candidate) -> Bool in
@@ -628,7 +726,8 @@ extension SudokuPuzzle{
                         //get column house
                         if let colhouse = Self.houseToIndexMap[index]?.filter({$0.type == xtype.opposite}).first {
                             let colIndicesThatMatchCross = allCrossIndices.filter{colhouse.memberIndices.contains($0)}
-                            let hint = PossiblesHint(type: .xWing, indices: Set(colIndicesThatMatchCross), values: Set([possible.value]), house: colhouse)
+                            let hint = Hint(type: .xWing, possiblesHighlights: [], highlights: [], answer: nil)
+                           // let hint = PossiblesHint(type: .xWing, indices: Set(colIndicesThatMatchCross), values: Set([possible.value]), house: colhouse)
                             if(!mutableresults.contains(hint)){
                                 mutableresults.append(hint)
                             }
