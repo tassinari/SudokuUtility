@@ -622,8 +622,11 @@ extension SudokuPuzzle{
                     for other in otherHouses{
                         let otherPossibles = Set(other.memberIndices).subtracting(indices).map{possibles[$0] ?? []}.flatMap{$0}
                         if(Set(otherPossibles).contains(i)){
-                            locked.append(Hint(type: .lockedCandidate, possiblesHighlights: [], highlights: [HighlightType.house(house),HighlightType.house(other)], answer: nil))
-                            //locked.append(PossiblesHint(type: .lockedCandidate, indices: Set(indices), values: Set(arrayLiteral: i), house: other))
+                            let negativeIndices = other.memberIndices.filter{ possibles[$0]?.contains(i) ?? false && !house.memberIndices.contains($0)}
+                            var possibleHighlights : [PossibleHighlights] = indices.map{ PossibleHighlights(index: $0, positiveHighlights: [i], negativeHighlights: [])}
+                            let negs : [PossibleHighlights] = negativeIndices.map{ PossibleHighlights(index: $0, positiveHighlights: [], negativeHighlights: [i])}
+                            possibleHighlights.append(contentsOf: negs)
+                            locked.append(Hint(type: .lockedCandidate, possiblesHighlights:possibleHighlights, highlights: [HighlightType.house(house),HighlightType.house(other)], answer: nil))
                         }
                         
                     }
