@@ -178,12 +178,19 @@ extension Hint : CustomDebugStringConvertible{
     
     
 }
-
+extension House : CustomDebugStringConvertible{
+    public var debugDescription: String {
+        
+        return "House(type: .\(self.type), houseIndex: \(self.houseIndex))"
+    }
+    
+    
+}
 extension HighlightType : CustomDebugStringConvertible{
     public var debugDescription: String {
         switch self{
         case .house(let h):
-            return "HighlightType.house(\(House(type: h.type, houseIndex: h.houseIndex)))"
+            return "HighlightType.house(\(h.debugDescription))"
         case .index(let i):
             return "HighlightType.index(\(i))"
         }

@@ -287,21 +287,17 @@ class GradingTests: XCTestCase {
         let solved = try? puzzle.solvedCopy()
         let locked = puzzle.lockedCandidate(possibles: puzzle.possibleValueMatrix)
         var expected : [Hint] = []
-        expected.append( Hint(type: .lockedCandidate, possiblesHighlights: [], highlights: [HighlightType.house(House(type: SudukoUtility.HouseType.group, houseIndex: 1)), HighlightType.house(House(type: SudukoUtility.HouseType.column, houseIndex: 3))], answer: nil) )
-        expected.append( Hint(type: .lockedCandidate, possiblesHighlights: [], highlights: [HighlightType.house(House(type: SudukoUtility.HouseType.group, houseIndex: 3)), HighlightType.house(House(type: SudukoUtility.HouseType.row, houseIndex: 5))], answer: nil) )
-        expected.append( Hint(type: .lockedCandidate, possiblesHighlights: [], highlights: [HighlightType.house(House(type: SudukoUtility.HouseType.group, houseIndex: 4)), HighlightType.house(House(type: SudukoUtility.HouseType.column, houseIndex: 3))], answer: nil) )
-        expected.append( Hint(type: .lockedCandidate, possiblesHighlights: [], highlights: [HighlightType.house(House(type: SudukoUtility.HouseType.group, houseIndex: 8)), HighlightType.house(House(type: SudukoUtility.HouseType.column, houseIndex: 6))], answer: nil) )
+        expected.append( Hint(type: .lockedCandidate, possiblesHighlights: [PossibleHighlights(index: 3, positiveHighlights: [1], negativeHighlights : []), PossibleHighlights(index: 21, positiveHighlights: [1], negativeHighlights : []), PossibleHighlights(index: 57, positiveHighlights: [], negativeHighlights : [1]), PossibleHighlights(index: 66, positiveHighlights: [], negativeHighlights : [1]), PossibleHighlights(index: 75, positiveHighlights: [], negativeHighlights : [1])], highlights: [HighlightType.house(House(type: .group, houseIndex: 1)), HighlightType.house(House(type: .column, houseIndex: 3))], answer: nil) )
+        expected.append( Hint(type: .lockedCandidate, possiblesHighlights: [PossibleHighlights(index: 45, positiveHighlights: [5], negativeHighlights : []), PossibleHighlights(index: 47, positiveHighlights: [5], negativeHighlights : []), PossibleHighlights(index: 48, positiveHighlights: [], negativeHighlights : [5]), PossibleHighlights(index: 50, positiveHighlights: [], negativeHighlights : [5]), PossibleHighlights(index: 53, positiveHighlights: [], negativeHighlights : [5])], highlights: [HighlightType.house(House(type: .group, houseIndex: 3)), HighlightType.house(House(type: .row, houseIndex: 5))], answer: nil) )
+        expected.append( Hint(type: .lockedCandidate, possiblesHighlights: [PossibleHighlights(index: 30, positiveHighlights: [3], negativeHighlights : []), PossibleHighlights(index: 48, positiveHighlights: [3], negativeHighlights : []), PossibleHighlights(index: 57, positiveHighlights: [], negativeHighlights : [3]), PossibleHighlights(index: 66, positiveHighlights: [], negativeHighlights : [3]), PossibleHighlights(index: 75, positiveHighlights: [], negativeHighlights : [3])], highlights: [HighlightType.house(House(type: .group, houseIndex: 4)), HighlightType.house(House(type: .column, houseIndex: 3))], answer: nil) )
+        expected.append( Hint(type: .lockedCandidate, possiblesHighlights: [PossibleHighlights(index: 60, positiveHighlights: [6], negativeHighlights : []), PossibleHighlights(index: 69, positiveHighlights: [6], negativeHighlights : []), PossibleHighlights(index: 24, positiveHighlights: [], negativeHighlights : [6])], highlights: [HighlightType.house(House(type: .group, houseIndex: 8)), HighlightType.house(House(type: .column, houseIndex: 6))], answer: nil) )
+       
         for e in expected{
             if !locked.contains(e){
                 XCTFail("hint not found : \n \(e.debugDescription)")
             }
-            
         }
         let rated = try? puzzle.internalRate()
-        if(solved!.data == rated!.2.currentPuzzle.data){
-            print("solved ")
-        }
-        XCTFail("expected seems off, need to re-check test logic here")
         XCTAssert(solved!.data == rated!.2.currentPuzzle.data)
         
         
