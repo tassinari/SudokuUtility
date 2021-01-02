@@ -672,6 +672,7 @@ extension SudokuPuzzle{
         let indices : [Int]
     
     }
+    
     fileprivate struct xWingDirection{
         let direction : HouseType
         var opposite : HouseType{
@@ -695,7 +696,7 @@ extension SudokuPuzzle{
             }
         }
     }
-
+    
     internal func xwing(possibles : Possibles) -> [Hint]{
         let types : [xWingDirection] = [xWingDirection(direction: .row),xWingDirection(direction: .column)]
         var resultsHolder : [[Hint]] = []
@@ -721,35 +722,43 @@ extension SudokuPuzzle{
                 //nothing found
                 return []
             }
-            let myResult = candidates.reduce(Array<Hint>()) { (xwingResults, possible) -> [Hint] in
-                guard possible.indices.count == 2 else  { return xwingResults}
-                var mutableresults = xwingResults
-                let match = candidates.filter { (candidate) -> Bool in
-                    if candidate.house == possible.house { return false} //dont include itsself as a match
-                    return candidate.value == possible.value &&  candidate.indices.map{xtype.crossItem($0)} == possible.indices.map{xtype.crossItem($0)}
-                }
-                if match.count > 0{
-                    //either match or possible, grab the columns and make a Possible hint from that house
-                    //indices have to be the column indices that cross the rows
-                    let allCrossIndices = possible.indices + match.first!.indices
-                    for index in possible.indices{
-                        //get column house
-                        if let colhouse = Self.houseToIndexMap[index]?.filter({$0.type == xtype.opposite}).first {
-                            let colIndicesThatMatchCross = allCrossIndices.filter{colhouse.memberIndices.contains($0)}
-                            let hint = Hint(type: .xWing, possiblesHighlights: [], highlights: [], answer: nil)
-                           // let hint = PossiblesHint(type: .xWing, indices: Set(colIndicesThatMatchCross), values: Set([possible.value]), house: colhouse)
-                            if(!mutableresults.contains(hint)){
-                                mutableresults.append(hint)
-                            }
-                        }
+            //candidates are rows or columns in the same direction that have 2 and only 2 possible of a certain possible value
+            let hints : [Hint] = candidates.reduce([]) { (pairs, row) -> [Hint] in
+                //match this row with any in the other candidates
+                let matches = candidates.filter{ $0.value == row.value && Set($0.indices.map{ $0 % 9 }) == Set(row.indices.map{ $0 % 9})}
+                
+                if (matches.count > 1){
+                    var arr = pairs
+                    //HouseA = matches.first
+                    //HouseB =  matches.last
+                    //possibleValue = matches.first!.value
+                    //indices = matches.first.indices
+                    //CrossHouseA = indices.first
+                    //CrossHouseB = indices.last
+                    let crossHouses =  matches.first!.indices.map{ House(type: xtype.opposite, houseIndex: xtype.crossItem($0))}
+                    guard let crossA = crossHouses.first, let crossB = crossHouses.last else {
+                        return pairs
                     }
+                    let goodIndices = matches.first!.indices + matches.last!.indices
+                    var goodHL : [PossibleHighlights] = goodIndices.map{PossibleHighlights(index: $0, positiveHighlights: [matches.first!.value], negativeHighlights: [])}
+                    let negIndices = (crossA.memberIndices + crossB.memberIndices).filter{  !goodIndices.contains($0) && possibles[$0]?.contains(matches.first!.value) ?? false}
+                    
+                    if negIndices.count > 0 {
+                        goodHL.append(contentsOf: negIndices.map{ PossibleHighlights(index: $0, positiveHighlights: [], negativeHighlights: [matches.first!.value]) })
+                        arr.append(Hint(type: .xWing, possiblesHighlights: goodHL, highlights: [HighlightType.house(matches.first!.house),HighlightType.house(matches.last!.house), HighlightType.house(crossA), HighlightType.house(crossB)], answer: nil))
+                    }
+
+                    return arr
                 }
-                return mutableresults
+                
+                return pairs
             }
-            resultsHolder.append(myResult)
+            resultsHolder.append(hints)
         }
         return resultsHolder.flatMap{$0}
     }
+
+   
     
     // Swordfish
 }

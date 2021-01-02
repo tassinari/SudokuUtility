@@ -356,13 +356,16 @@ class GradingTests: XCTestCase {
         ]
         let puzzle = SudokuPuzzle(data: data)
         let xwing = puzzle.xwing(possibles: puzzle.possibleValueMatrix)
-        let sets = [Set(arrayLiteral: 49,13),Set(arrayLiteral: 53,17), Set(arrayLiteral: 23,24),Set(arrayLiteral: 41,42)]
-//        let _ = sets.map{ XCTAssert(xwing.map{$0.indices}.contains($0))}
-//        let _ = xwing.filter{ sets.contains($0.indices)}.map { (hint) -> Void in
-//            XCTAssert(hint.values.count == 1)
-//            XCTAssert(hint.values.contains(1) || hint.values.contains(6))
-//        }
-        XCTFail("Need to implement a test")
+        var expected : [Hint] = []
+        expected.append( Hint(type: .xWing, possiblesHighlights: [PossibleHighlights(index: 13, positiveHighlights: [1], negativeHighlights : []), PossibleHighlights(index: 17, positiveHighlights: [1], negativeHighlights : []), PossibleHighlights(index: 49, positiveHighlights: [1], negativeHighlights : []), PossibleHighlights(index: 53, positiveHighlights: [1], negativeHighlights : []), PossibleHighlights(index: 4, positiveHighlights: [], negativeHighlights : [1]), PossibleHighlights(index: 22, positiveHighlights: [], negativeHighlights : [1]), PossibleHighlights(index: 40, positiveHighlights: [], negativeHighlights : [1]), PossibleHighlights(index: 8, positiveHighlights: [], negativeHighlights : [1]), PossibleHighlights(index: 44, positiveHighlights: [], negativeHighlights : [1])], highlights: [HighlightType.house(House(type: .row, houseIndex: 1)), HighlightType.house(House(type: .row, houseIndex: 5)), HighlightType.house(House(type: .column, houseIndex: 4)), HighlightType.house(House(type: .column, houseIndex: 8))], answer: nil) )
+        expected.append( Hint(type: .xWing, possiblesHighlights: [PossibleHighlights(index: 13, positiveHighlights: [1], negativeHighlights : []), PossibleHighlights(index: 17, positiveHighlights: [1], negativeHighlights : []), PossibleHighlights(index: 49, positiveHighlights: [1], negativeHighlights : []), PossibleHighlights(index: 53, positiveHighlights: [1], negativeHighlights : []), PossibleHighlights(index: 4, positiveHighlights: [], negativeHighlights : [1]), PossibleHighlights(index: 22, positiveHighlights: [], negativeHighlights : [1]), PossibleHighlights(index: 40, positiveHighlights: [], negativeHighlights : [1]), PossibleHighlights(index: 8, positiveHighlights: [], negativeHighlights : [1]), PossibleHighlights(index: 44, positiveHighlights: [], negativeHighlights : [1])], highlights: [HighlightType.house(House(type: .row, houseIndex: 1)), HighlightType.house(House(type: .row, houseIndex: 5)), HighlightType.house(House(type: .column, houseIndex: 4)), HighlightType.house(House(type: .column, houseIndex: 8))], answer: nil) )
+
+        for e in expected{
+            if !xwing.contains(e){
+                XCTFail("hint not found : \n \(e.debugDescription)")
+            }
+            
+        }
         
     }
     
