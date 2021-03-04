@@ -294,7 +294,11 @@ extension SudokuPuzzle{
         }
        return givenindices
     }
+    public static func fromData(_ data : [Int]) -> SudokuPuzzle{
+        
+        return SudokuPuzzle.init(data: data)
 
+    }
     public static func creatPuzzle() throws -> SudokuPuzzle{
         
         return try createSquare(ofSize: 9).subtractTilGood(0)
