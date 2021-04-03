@@ -240,24 +240,7 @@ class SudokuTests: XCTestCase {
        
 
     }
-    func testCreateSize(){
-        let count = 20
-        var sizes : [Int] = []
-        do {
-            for _ in 0..<count{
-                let puzzle = try SudokuPuzzle.creatPuzzle()
-                sizes.append(puzzle.data.filter{$0 != 0}.count)
-            }
-            let average = sizes.reduce(0,+) / count
-            //print("size average is \(average)")
-            XCTAssert(average < 26,"Average is off, should be ~29 but is \(average)")
-            print(average)
-            print(sizes)
-        } catch let e {
-            XCTFail(e.localizedDescription)
-        }
-        
-    }
+  
     
     
     func testThatMultipleSolvesWorks(){
@@ -285,6 +268,37 @@ class SudokuTests: XCTestCase {
         XCTAssert(b,"Tree is not the same")
         
     }
+    
+    func testCreateIsRandomlyDistributedAndSizedRight(){
+        
+        let count = 200
+        var puzzles : [SudokuPuzzle] = []
+        do {
+            for _ in 0..<count{
+                let puzzle = try SudokuPuzzle.creatPuzzle()
+                puzzles.append(puzzle)
+            }
+            //create an array of 81 ints, each entry contains the number of values at that index for the entire test set
+            var histogram = Array(repeating: 0, count: 81)
+            for puzzle in puzzles{
+                for (i,v) in puzzle.data.enumerated(){
+                    if v > 0 { histogram[i] = histogram[i] + 1}
+                }
+            }
+            let sizes = puzzles.map{$0.data.count}
+            let averagePuzzleSize = sizes.reduce(0,+) / sizes.count
+            let expectedHistogramHeight = count * (averagePuzzleSize / 81)
+            XCTAssert(averagePuzzleSize < 26,"Average is off, should be ~29 but is \(averagePuzzleSize)")
+            for (i,v) in histogram.enumerated(){
+                XCTAssert(v < expectedHistogramHeight + 10  && v > expectedHistogramHeight - 10, "count of index \(i) is off")
+            }
+            print(histogram)
+        } catch let e {
+            XCTFail(e.localizedDescription)
+        }
+    }
+    
+    
     func treesAreTheSame(tree1Root : DLXNode,tree2Root : DLXNode ) -> Bool{
         func columnsEqual(col1 : DLXNode, col2 : DLXNode) -> Bool{
             if(col1.coordinate.column != col2.coordinate.column ){

@@ -315,6 +315,7 @@ extension SudokuPuzzle{
         for _ in 1...20{
             let candidate = randoms.removeFirst()
             let opposite = 80 - candidate
+            //randoms.remove(at: candidate)
             history.append([candidate : d[candidate]])
             history.append([opposite : d[opposite]])
             d[candidate] = 0
@@ -339,7 +340,7 @@ extension SudokuPuzzle{
             var shouldStop = true
             var hasRemoved = false
             repeat{
-                let indices = puzzle.data.indices.filter{ puzzle.data[$0] > 0}
+                let indices = puzzle.data.indices.filter{ puzzle.data[$0] > 0}.shuffled()
                 shouldStop = true
                 for i in indices{
                     let v = puzzle.data[i]
