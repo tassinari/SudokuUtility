@@ -7,7 +7,11 @@
 //
 
 import Foundation
-public enum DificultyRating : Int16{
+public enum DificultyRating : Int16, Comparable{
+    public static func < (lhs: DificultyRating, rhs: DificultyRating) -> Bool {
+        return lhs.rawValue  < rhs.rawValue
+    }
+    
     case notRated = 0, easy = 1,medium = 2, hard = 3 , extraHard = 4
     
     public var userLocalizedStringValue : String{

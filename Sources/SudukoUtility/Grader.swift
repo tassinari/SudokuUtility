@@ -398,81 +398,40 @@ extension SudokuPuzzle{
     }
 
     public func rate() throws -> DificultyRating{
-        return try internalRate().3
+        return try internalRate().1
     }
-    internal func internalRate() throws -> (Int,Int,SolveData,DificultyRating){
-        
-        let solvedData = try _rate(solveData: SolveData(recurseCount: 0, currentPuzzle: self, possibleValuesMatrix: self.possibleValueMatrix, solveLog: []))
-        
-        let solved = try self.solvedCopy()
-      
+    internal func internalRate() throws -> (SolveData,DificultyRating){
         
         /*
-         Naked single 100
-         HiddenSingle 200
-         Naked Pair 200
-         Hidden Pair 300
-         Naked Triple 400
-         Hidden Triple 400
-         Naked Quad 500
-         Hidden Quad 600
-         Locked Candidate 300
-         X Wing 800
+         Easy: Naked or hidden singles
          
-         */
-        var score = 0
-        for hint in solvedData.solveLog{
+         medium : need to use locked candidate hidden sets
+         
+         Hard: Need to use xwing swordfish
+         
+         Extra Hard:  Cant be solved with xwing/ swordfish
+    
+        */
+        
+        let solvedData = try _rate(solveData: SolveData(recurseCount: 0, currentPuzzle: self, possibleValuesMatrix: self.possibleValueMatrix, solveLog: []))
+        let solved = try self.solvedCopy()
+        if(solvedData.currentPuzzle.data != solved.data){
+            return ( solvedData,.extraHard)
+        }
+        let rating = solvedData.solveLog.reduce(DificultyRating.notRated) { (currentRating, hint) -> DificultyRating in
             
             switch hint.type{
-            
-            case .hiddenSingle:
-                score += 200
-                break
-            case .nakedSingle:
-                score += 100
-                break
-                
-            case .hiddenSet:
-                score += 200 * (hint.possiblesHighlights.first?.positiveHighlights.count ?? 1)
-                break
-            case .nakedSet:
-                score += 150 * (hint.possiblesHighlights.first?.positiveHighlights.count ?? 1)
-                break
-            case .lockedCandidate:
-                score += 300
-                break
-            case .xWing:
-                score += 800
-                break
-            case.swordfish:
-                //FIXME: implement
-                break
-                
+            case .nakedSingle, .hiddenSingle:
+                return currentRating > .easy ? currentRating : .easy
+            case .lockedCandidate, .nakedSet, .hiddenSet:
+                return currentRating > .medium ? currentRating : .medium
+            case .xWing, .swordfish:
+                return .hard
+         
             }
         }
-        var rating : DificultyRating = .hard
-        if(solvedData.currentPuzzle.data != solved.data){
-            score += 10000
-        }
-        switch score{
-        case 0..<2200:
-            rating = .easy
-            break
-        case 2200..<2901:
-            rating = .medium
-            break
-        case 2901..<10000:
-            rating = .hard
-            break
-        case 10001..<21900:
-            rating = .extraHard
-            break
-        default:
-            rating = .extraHard
-            break
-            //return.extraHard
-        }
-        return (solvedData.solveLog.count, score,solvedData,rating)
+        return (solvedData, rating)
+
     }
     
     private static var allHouses : [House] = {

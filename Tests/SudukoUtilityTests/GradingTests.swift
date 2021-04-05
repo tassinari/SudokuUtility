@@ -167,8 +167,8 @@ class GradingTests: XCTestCase {
         //let rated = p.nakedSets(possibles: p.possibleValueMatrix)
         do{
             let rated = try p.internalRate()
-            XCTAssert(!Set(rated.2.possibleValuesMatrix[5] ?? []).contains(4) )
-            XCTAssert(!Set(rated.2.possibleValuesMatrix[14] ?? []).contains(4) )
+            XCTAssert(!Set(rated.0.possibleValuesMatrix[5] ?? []).contains(4) )
+            XCTAssert(!Set(rated.0.possibleValuesMatrix[14] ?? []).contains(4) )
         }catch{
             XCTFail()
         }
@@ -316,7 +316,7 @@ class GradingTests: XCTestCase {
             }
         }
         let rated = try? puzzle.internalRate()
-        XCTAssert(solved!.data == rated!.2.currentPuzzle.data)
+        XCTAssert(solved!.data == rated!.0.currentPuzzle.data)
         
         
     }
@@ -440,9 +440,9 @@ class GradingTests: XCTestCase {
         let puzzle = SudokuPuzzle(data: data)
         let solved = try? puzzle.solvedCopy()
         let rated = try? puzzle.internalRate()
-        let typesUsed = rated?.2.solveLog.map{$0.type}
+        let typesUsed = rated?.0.solveLog.map{$0.type}
         if let types = typesUsed{
-            if(solved!.data == rated!.2.currentPuzzle.data){
+            if(solved!.data == rated!.0.currentPuzzle.data){
                 print("solved -- \(types)")
             }else{
                 print("fail -- \(types)")
@@ -462,25 +462,26 @@ class GradingTests: XCTestCase {
         }
     }
     func testRateScore(){
-        var data : [(SudokuPuzzle,Int,Int,Bool,String)] = []
+       // var data : [(SudokuPuzzle,Int,Int,Bool,String)] = []
         do {
             for _ in 0..<100{
                 let puzzle = try SudokuPuzzle.creatPuzzle()
-                let rated = try puzzle.internalRate()
-                let solved = try puzzle.solvedCopy()
-                let solvedata = rated.2
-                let solvable = solvedata.currentPuzzle.data == solved.data
-                let typesUsed = solvedata.solveLog.map{$0.type}
-                let str = typesUsed.reduce("") { (theStr, hint) -> String in
-                    var mutableStr = theStr
-                    if mutableStr.count == 0{
-                        mutableStr = hint.description
-                    }else{
-                        mutableStr = "\(mutableStr)|\(hint.description)"
-                    }
-                    return mutableStr
-                }
-                data.append((puzzle,rated.0,rated.1,solvable,str))
+                let rated = try puzzle.rate()
+//                let solved = try puzzle.solvedCopy()
+//                let solvedata = rated.0
+//                let solvable = solvedata.currentPuzzle.data == solved.data
+//                let typesUsed = solvedata.solveLog.map{$0.type}
+//                let str = typesUsed.reduce("") { (theStr, hint) -> String in
+//                    var mutableStr = theStr
+//                    if mutableStr.count == 0{
+//                        mutableStr = hint.description
+//                    }else{
+//                        mutableStr = "\(mutableStr)|\(hint.description)"
+//                    }
+//                    return mutableStr
+//                }
+                print(rated)
+               // data.append((puzzle,rated.0,rated.1,solvable,str))
                
         }
         } catch let e {
@@ -516,9 +517,9 @@ class GradingTests: XCTestCase {
             let solved = try? puzzle.solvedCopy()
             let rated = try? puzzle.internalRate()
             
-            let typesUsed = rated?.2.solveLog.map{$0.type}
+            let typesUsed = rated?.0.solveLog.map{$0.type}
             if let types = typesUsed{
-                if(solved!.data == rated!.2.currentPuzzle.data){
+                if(solved!.data == rated!.0.currentPuzzle.data){
                     print("solved -- \(types)")
                 }else{
                     print("fail -- \(types)")
@@ -567,9 +568,9 @@ class GradingTests: XCTestCase {
             let solved = try? puzzle.solvedCopy()
             let rated = try? puzzle.internalRate()
             
-            let typesUsed = rated?.2.solveLog.map{$0.type}
+            let typesUsed = rated?.0.solveLog.map{$0.type}
             if let types = typesUsed{
-                if(solved!.data == rated!.2.currentPuzzle.data){
+                if(solved!.data == rated!.0.currentPuzzle.data){
                     print("solved -- \(types)")
                 }else{
                     print("fail -- \(types)")
