@@ -289,6 +289,9 @@ extension SudokuPuzzle{
             case .xWing:
                 sets = solveData.currentPuzzle.xwing(possibles: solveData.possibleValuesMatrix)
                 modifiedPossibles = self.modifyPossiblesForHints(possibles: modifiedPossibles, hints: sets)
+            case .swordfish:
+                sets = solveData.currentPuzzle.swordfish(possibles: solveData.possibleValuesMatrix)
+                modifiedPossibles = self.modifyPossiblesForHints(possibles: modifiedPossibles, hints: sets)
             default:
                 break
             }
@@ -373,6 +376,11 @@ extension SudokuPuzzle{
         let xwing = self.xwing(possibles:possibles)
         if xwing.count > 0{
             return xwing.first!
+        }
+        //Swordfish
+        let sword = self.swordfish(possibles:possibles)
+        if sword.count > 0{
+            return sword.first!
         }
         
         return nil
@@ -761,6 +769,62 @@ extension SudokuPuzzle{
    
     
     // Swordfish
+    //TODO: Combine with xwing to produce a n-fish function
+    internal func swordfish(possibles : Possibles) -> [Hint]{
+        let types : [xWingDirection] = [xWingDirection(direction: .row),xWingDirection(direction: .column)]
+        var resultsHolder : [[Hint]] = []
+        
+        for xtype in types{
+            let rows = Self.allHouses.filter({$0.type == xtype.direction})
+            var candidates : [XWingPossible] = []
+            for house in rows{
+                let allKeysOfRow = possibles.keys.filter{house.memberIndices.contains($0)}
+                let allValuesOfRow = allKeysOfRow.map{possibles[$0] ?? []}.flatMap{$0}
+                let countedSet = CountedSet(withArray: allValuesOfRow)
+                for i in 1...9{
+                    if(countedSet.count(of: i) == 3 || countedSet.count(of: i) == 2){
+                        let indices : [Int] = house.memberIndices.filter { (index) -> Bool in
+                            return possibles[index]?.contains(i) ?? false
+                        }
+                        candidates.append(XWingPossible(house: house, value: i, indices: indices))
+                    }
+                }
+            }
+            //if candidates.count > 1, check that the columns align
+            if(candidates.count < 3){
+                //nothing found
+                return []
+            }
+            //candidates are rows or columns in the same direction that have 2 and only 2 possible of a certain possible value
+            let hints : [Hint] = candidates.reduce([]) { (pairs, row) -> [Hint] in
+                //match this row with any in the other candidates
+                let matches = candidates.filter{ $0.value == row.value && Set($0.indices.map{ $0 % 9 }).isSubset(of: Set(row.indices.map{ $0 % 9})) }
+                
+                if (matches.count == 3){
+                    var arr = pairs
+                    
+                    let rowWith3 = matches.first(where: {$0.indices.count == 3})
+                    guard let crossHouses =  rowWith3?.indices.map({ House(type: xtype.opposite, houseIndex: xtype.crossItem($0))}) else{
+                        return pairs
+                    }
+                    let goodIndices = matches.flatMap{$0.indices}
+                    var goodHL : [PossibleHighlights] = goodIndices.map{PossibleHighlights(index: $0, positiveHighlights: [matches.first!.value], negativeHighlights: [])}
+                    let negIndices = crossHouses.flatMap{$0.memberIndices}.filter{  !goodIndices.contains($0) && possibles[$0]?.contains(matches.first!.value) ?? false}
+                    
+                    if negIndices.count > 0 {
+                        goodHL.append(contentsOf: negIndices.map{ PossibleHighlights(index: $0, positiveHighlights: [], negativeHighlights: [matches.first!.value]) })
+                        arr.append(Hint(type: .swordfish, possiblesHighlights: goodHL, highlights: matches.map{HighlightType.house($0.house)} + crossHouses.map({HighlightType.house($0)}), answer: nil))
+                    }
+
+                    return arr
+                }
+                
+                return pairs
+            }
+            resultsHolder.append(hints)
+        }
+        return resultsHolder.flatMap{$0}
+    }
 }
 
 

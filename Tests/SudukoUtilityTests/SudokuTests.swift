@@ -271,7 +271,7 @@ class SudokuTests: XCTestCase {
     
     func testCreateIsRandomlyDistributedAndSizedRight(){
         
-        let count = 200
+        let count = 500
         var puzzles : [SudokuPuzzle] = []
         do {
             for _ in 0..<count{
@@ -285,14 +285,20 @@ class SudokuTests: XCTestCase {
                     if v > 0 { histogram[i] = histogram[i] + 1}
                 }
             }
-            let sizes = puzzles.map{$0.data.count}
+            let sizes = puzzles.map{$0.data.filter({$0 > 0}).count}
             let averagePuzzleSize = sizes.reduce(0,+) / sizes.count
-            let expectedHistogramHeight = count * (averagePuzzleSize / 81)
+            let expectedHistogramHeight = Int(Double(count) * (Double(averagePuzzleSize) / 81.0))
             XCTAssert(averagePuzzleSize < 26,"Average is off, should be ~29 but is \(averagePuzzleSize)")
-            for (i,v) in histogram.enumerated(){
-                XCTAssert(v < expectedHistogramHeight + 10  && v > expectedHistogramHeight - 10, "count of index \(i) is off")
-            }
+           
+            let averageHeight = Double(histogram.reduce(0, +)) / Double( histogram.count)
+            let difs = histogram.map{(Double($0) - averageHeight) * (Double($0) - averageHeight)}
+            let sd = sqrt(difs.reduce(0,+) / Double(histogram.count))
+            print(sd)
             print(histogram)
+            for (i,v) in histogram.enumerated(){
+                //assert each within 2 sd
+                XCTAssert(v >= Int(averageHeight - 2.0 * sd) && v <= Int(averageHeight + 2.0 * sd), "count of index \(i) is off")
+            }
         } catch let e {
             XCTFail(e.localizedDescription)
         }

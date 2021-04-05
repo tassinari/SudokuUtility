@@ -257,6 +257,24 @@ class GradingTests: XCTestCase {
         
         
     }
+    func testLockedCandidateType2(){
+        let data = [
+         5 , 0 , 0 , 2 , 0 , 0 , 0 , 1 , 0 ,
+         0 , 0 , 1 , 9 , 0 , 0 , 7 , 3 , 0 ,
+         0 , 0 , 0 , 0 , 0 , 0 , 8 , 0 , 0 ,
+         0 , 5 , 0 , 0 , 2 , 0 , 0 , 0 , 8 ,
+         0 , 6 , 2 , 0 , 3 , 9 , 0 , 0 , 0 ,
+         0 , 0 , 0 , 0 , 0 , 4 , 3 , 0 , 0 ,
+         0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 ,
+         0 , 8 , 0 , 4 , 6 , 7 , 9 , 0 , 0 ,
+         0 , 0 , 7 , 3 , 0 , 0 , 0 , 0 , 0
+        ]
+        let puzzle = SudokuPuzzle(data: data)
+        let locked = puzzle.lockedCandidate(possibles: puzzle.possibleValueMatrix)
+        let expected = Hint(type: .lockedCandidate, possiblesHighlights: [PossibleHighlights(index: 60, positiveHighlights: [2], negativeHighlights : []), PossibleHighlights(index: 78, positiveHighlights: [2], negativeHighlights : []), PossibleHighlights(index: 61, positiveHighlights: [], negativeHighlights : [2]), PossibleHighlights(index: 62, positiveHighlights: [], negativeHighlights : [2]), PossibleHighlights(index: 70, positiveHighlights: [], negativeHighlights : [2]), PossibleHighlights(index: 71, positiveHighlights: [], negativeHighlights : [2]), PossibleHighlights(index: 79, positiveHighlights: [], negativeHighlights : [2]), PossibleHighlights(index: 80, positiveHighlights: [], negativeHighlights : [2])], highlights: [HighlightType.house(House(type: .column, houseIndex: 6)), HighlightType.house(House(type: .group, houseIndex: 8))], answer: nil)
+        XCTAssert( locked.count == 1 && locked.first! == expected)
+    }
+    
     func testLockedCandidate(){
         //Good example AAAIgACYAAmAAAUuAAAYAAAK4AAAAABG4AApkAAZAAFQAAAEZgACQAVBTNgRnQAMAAAAAAAAAA==  //group 3 locks the 4s out of colomn 0 in group 0, so index 0 can remove its possible 4
         
@@ -368,6 +386,34 @@ class GradingTests: XCTestCase {
         }
         
     }
+    func testSwordfish(){
+        //https://www.sudocue.net/guide.php
+  
+        let data = [
+         2 , 6 , 1 , 0 , 3 , 0 , 8 , 4 , 5 ,
+         4 , 5 , 9 , 0 , 1 , 0 , 3 , 7 , 6 ,
+         7 , 8 , 3 , 5 , 6 , 4 , 0 , 0 , 9 ,
+         9 , 0 , 8 , 0 , 0 , 3 , 0 , 0 , 4 ,
+         6 , 0 , 5 , 0 , 4 , 0 , 9 , 0 , 2 ,
+         1,  0 , 0 , 6 , 0 , 0 , 0 , 0 , 8 ,
+         3 , 0 , 0 , 4 , 0 , 0 , 0 , 8 , 1 ,
+         8 , 0 , 6 , 0 , 2 , 0 , 0 , 0 , 3 ,
+         5 , 0 , 0 , 3 , 8 , 0 , 0 , 0 , 7
+        ]
+        let puzzle = SudokuPuzzle(data: data)
+        let sword = puzzle.swordfish(possibles: puzzle.possibleValueMatrix)
+        var expected : [Hint] = []
+        expected.append( Hint(type: .swordfish, possiblesHighlights: [PossibleHighlights(index: 3, positiveHighlights: [7], negativeHighlights : []), PossibleHighlights(index: 5, positiveHighlights: [7], negativeHighlights : []), PossibleHighlights(index: 37, positiveHighlights: [7], negativeHighlights : []), PossibleHighlights(index: 39, positiveHighlights: [7], negativeHighlights : []), PossibleHighlights(index: 41, positiveHighlights: [7], negativeHighlights : []), PossibleHighlights(index: 64, positiveHighlights: [7], negativeHighlights : []), PossibleHighlights(index: 66, positiveHighlights: [7], negativeHighlights : []), PossibleHighlights(index: 68, positiveHighlights: [7], negativeHighlights : []), PossibleHighlights(index: 28, positiveHighlights: [], negativeHighlights : [7]), PossibleHighlights(index: 46, positiveHighlights: [], negativeHighlights : [7]), PossibleHighlights(index: 55, positiveHighlights: [], negativeHighlights : [7]), PossibleHighlights(index: 30, positiveHighlights: [], negativeHighlights : [7]), PossibleHighlights(index: 50, positiveHighlights: [], negativeHighlights : [7]), PossibleHighlights(index: 59, positiveHighlights: [], negativeHighlights : [7])], highlights: [HighlightType.house(House(type: .row, houseIndex: 0)), HighlightType.house(House(type: .row, houseIndex: 4)), HighlightType.house(House(type: .row, houseIndex: 7)), HighlightType.house(House(type: .column, houseIndex: 1)), HighlightType.house(House(type: .column, houseIndex: 3)), HighlightType.house(House(type: .column, houseIndex: 5))], answer: nil))
+        expected.append( Hint(type: .swordfish, possiblesHighlights: [PossibleHighlights(index: 3, positiveHighlights: [7], negativeHighlights : []), PossibleHighlights(index: 5, positiveHighlights: [7], negativeHighlights : []), PossibleHighlights(index: 37, positiveHighlights: [7], negativeHighlights : []), PossibleHighlights(index: 39, positiveHighlights: [7], negativeHighlights : []), PossibleHighlights(index: 41, positiveHighlights: [7], negativeHighlights : []), PossibleHighlights(index: 64, positiveHighlights: [7], negativeHighlights : []), PossibleHighlights(index: 66, positiveHighlights: [7], negativeHighlights : []), PossibleHighlights(index: 68, positiveHighlights: [7], negativeHighlights : []), PossibleHighlights(index: 28, positiveHighlights: [], negativeHighlights : [7]), PossibleHighlights(index: 46, positiveHighlights: [], negativeHighlights : [7]), PossibleHighlights(index: 55, positiveHighlights: [], negativeHighlights : [7]), PossibleHighlights(index: 30, positiveHighlights: [], negativeHighlights : [7]), PossibleHighlights(index: 50, positiveHighlights: [], negativeHighlights : [7]), PossibleHighlights(index: 59, positiveHighlights: [], negativeHighlights : [7])], highlights: [HighlightType.house(House(type: .row, houseIndex: 0)), HighlightType.house(House(type: .row, houseIndex: 4)), HighlightType.house(House(type: .row, houseIndex: 7)), HighlightType.house(House(type: .column, houseIndex: 1)), HighlightType.house(House(type: .column, houseIndex: 3)), HighlightType.house(House(type: .column, houseIndex: 5))], answer: nil) )
+
+        for e in expected{
+            if !sword.contains(e){
+                XCTFail("hint not found : \n \(e.debugDescription)")
+            }
+            
+        }
+        
+    }
     
     
     
@@ -405,10 +451,20 @@ class GradingTests: XCTestCase {
         
         
     }
+    func testUnsolvable(){
+        let puzzle = SudokuPuzzle.from(base64hash: "BkAJWBSIJVuAAAAACgMAAAAIgAAEwAAAErAAAGQAAAALAAAAAAuAALZACgAAvUEQABIAAAAAAA==")
+        do{
+            try puzzle.internalRate()
+            
+        }
+        catch{
+            XCTFail()
+        }
+    }
     func testRateScore(){
         var data : [(SudokuPuzzle,Int,Int,Bool,String)] = []
         do {
-            for _ in 0..<20{
+            for _ in 0..<100{
                 let puzzle = try SudokuPuzzle.creatPuzzle()
                 let rated = try puzzle.internalRate()
                 let solved = try puzzle.solvedCopy()
@@ -430,11 +486,11 @@ class GradingTests: XCTestCase {
         } catch let e {
             XCTFail(e.localizedDescription)
         }
-        print("data ---")
-        print("givens,HintCount,score,solvable,types")
-        for t in data{
-            print("\(t.0.data.filter({$0 > 0}).count),\(t.1),\(t.2),\(t.3 ? 1 : 0),\(t.4)")
-        }
+       // print("data ---")
+      //  print("givens,HintCount,score,solvable,types")
+//        for t in data{
+//            print("\(t.0.data.filter({$0 > 0}).count),\(t.1),\(t.2),\(t.3 ? 1 : 0),\(t.4)")
+//        }
     }
 //    func testRate(){
 //        do {
