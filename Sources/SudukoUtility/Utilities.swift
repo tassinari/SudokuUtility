@@ -47,7 +47,7 @@ extension SudokuPuzzle{
         }
         return indices
     }
-    static func housesFor(index : Int)-> [House]{
+    public static func housesFor(index : Int)-> [House]{
         let row = index / 9
         let col = index % 9
         let group = groupFrom(index: index)
