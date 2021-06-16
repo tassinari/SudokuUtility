@@ -109,7 +109,9 @@ extension SudokuPuzzle{
             }
             var rows = solution.map{$0.coordinate.row}
             rows.append(contentsOf: filledRows)
-            return SudokuPuzzle.sudukoPuzzleFromRows(rows)
+            var puzzle = SudokuPuzzle.sudukoPuzzleFromRows(rows)
+            puzzle._givens = self.givens
+            return puzzle
         } catch let e {
             throw e
         }
