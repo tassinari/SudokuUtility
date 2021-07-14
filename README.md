@@ -1,3 +1,3 @@
 # SudukoUtility
 
-A description of this package.
+A swift package that can create, solve and rate sudoku puzzles using the dancing links algorithm.
