@@ -78,26 +78,32 @@ public struct SudokuPuzzle{
         }
         return SudokuPuzzle(data: newData)
     }
+    //Dancing links (solver) is static, this is because setting up the linked lists can be expensive.  Its done once, so access must be protected via a serial queue
+    static let solverQueue = DispatchQueue(label: "solverQueu", qos: .background)
 }
 
 //MARK: Solving utilties
 extension SudokuPuzzle{
     
     public func solvedCopy() throws -> SudokuPuzzle{
+            //This goes on a static serial queue.  Dancing links is a static instance and is not thread safe
+            SudokuPuzzle.solverQueue.sync {
+                do {
+                let solvedColumns = filledColumns()
+                if(solvedColumns.count  > 0){
+                    SudokuPuzzle.solver.setPartialSolution(columns: solvedColumns)
+                }
         
-        let solvedColumns = filledColumns()
-        if(solvedColumns.count  > 0){
-            SudokuPuzzle.solver.setPartialSolution(columns: solvedColumns)
-        }
-        
-        do {
-            try SudokuPuzzle.solver.solve(random: false) { (answers) -> Bool in
-                   return true
+                try SudokuPuzzle.solver.solve(random: false) { (answers) -> Bool in
+                       return true
+                }
+                if(solvedColumns.count  > 0){
+                    SudokuPuzzle.solver.clearPartialSolution(columns: solvedColumns)
+                }
+                } catch {
+                    
+                }
             }
-            if(solvedColumns.count  > 0){
-                SudokuPuzzle.solver.clearPartialSolution(columns: solvedColumns)
-            }
-            
             guard let solution = SudokuPuzzle.solver.solutionSet.first else {
                 throw SudokuPuzzleError(type: .noSolutions, debugInfo: "No solutions found")
             }
@@ -112,30 +118,34 @@ extension SudokuPuzzle{
             var puzzle = SudokuPuzzle.sudukoPuzzleFromRows(rows)
             puzzle._givens = self.givens
             return puzzle
-        } catch let e {
-            throw e
-        }
+       
     }
     internal func _uniquelySolvable() throws -> (Bool,[[Int]]){
         //need to check if partial and set
-        let solvedColumns = filledColumns()
-        if(solvedColumns.count  > 0){
-            SudokuPuzzle.solver.setPartialSolution(columns: filledColumns())
-        }
-        var myAnswers : [[Int]] = []
-        do {
-            try SudokuPuzzle.solver.solve(random: true) { (answers) -> Bool in
-                myAnswers.append(answers.last!)
-                return answers.count > 1
-            }
+        var answer : (Bool,[[Int]]) = (false,[])
+        SudokuPuzzle.solverQueue.sync {
+            let solvedColumns = filledColumns()
             if(solvedColumns.count  > 0){
-                SudokuPuzzle.solver.clearPartialSolution(columns: filledColumns())
+                SudokuPuzzle.solver.setPartialSolution(columns: filledColumns())
             }
-            return (SudokuPuzzle.solver.solutionSet.count == 1, myAnswers)
+            var myAnswers : [[Int]] = []
+            do {
+                try SudokuPuzzle.solver.solve(random: true) { (answers) -> Bool in
+                    myAnswers.append(answers.last!)
+                    return answers.count > 1
+                }
+                if(solvedColumns.count  > 0){
+                    SudokuPuzzle.solver.clearPartialSolution(columns: filledColumns())
+                }
+                answer = (SudokuPuzzle.solver.solutionSet.count == 1, myAnswers)
+                
+            } catch {
+                
+            }
             
-        } catch let e {
-            throw e
         }
+        return answer
+        
     }
     public func uniquelySolvable() throws -> Bool{
         
@@ -280,16 +290,23 @@ extension SudokuPuzzle : CustomStringConvertible{
 extension SudokuPuzzle{
     //TODO: this shouldnt throw, if a puzzle cant be created we have deeper problems
     public static func createSquare(ofSize : Int) throws -> SudokuPuzzle{
-           //
-           var answers : [Int] = []
-        try SudokuPuzzle.solver.solve(random: true) { (answer) -> Bool in
-               answers = answer.first ?? []
-               return true
-           }
-           if answers.count == 0{
-               throw SudokuPuzzleError(type: .noSolutions, debugInfo: "createSquare was unable to create a puzzle.  An empty array was returned from DancingLinks solve")
-           }
-           return sudukoPuzzleFromRows(answers)
+       
+        var answers : [Int] = []
+        solverQueue.sync {
+            do{
+                try SudokuPuzzle.solver.solve(random: true) { (answer) -> Bool in
+                    answers = answer.first ?? []
+                    return true
+                }
+            }catch{
+                
+            }
+        }
+       
+        if answers.count == 0{
+            throw SudokuPuzzleError(type: .noSolutions, debugInfo: "createSquare was unable to create a puzzle.  An empty array was returned from DancingLinks solve")
+        }
+        return sudukoPuzzleFromRows(answers)
     }
     private func determineGivens() -> [Int]{
         var givenindices : [Int] = []
@@ -416,6 +433,8 @@ extension SudokuPuzzle{
 }
 
 extension SudokuPuzzle {
+   
+    
     internal static var solver : DancingLinks = {
         return DancingLinks(from: baseMatrix, size: 9 * 9 * 4)
     }()
